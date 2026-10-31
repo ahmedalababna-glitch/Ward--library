@@ -56,7 +56,7 @@ input, select { border: 1px solid var(--line); background: var(--card); border-r
 
   <div class="card" id="login">
     <h2>Enter the admin PIN</h2>
-    <div class="row" style="margin-top:8px"><input id="pin" type="password" inputmode="text" placeholder="PIN" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="btn primary" id="go">Open results</button><button class="btn" id="demo">See an example</button></div>
+    <div class="row" style="margin-top:8px"><input id="pin" type="password" inputmode="text" placeholder="PIN" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="btn" id="eye" type="button">👁 Show</button><button class="btn primary" id="go">Open results</button><button class="btn" id="demo">See an example</button></div>
     <p class="sub" id="lmsg" style="margin-top:8px"></p>
   </div>
 
@@ -216,6 +216,7 @@ $("find").oninput = () => renderStaff(analyse().E);
 $("csv").onclick = csv;
 $("demo").onclick = () => { ROWS = demoRows(); DEMO = true; show(); };
 $("go").onclick = () => { const p = $("pin").value.trim(); if (!p) return; if (!HAS_SERVER) { $("lmsg").innerHTML = `<span class="err">The results store is not connected yet. Tap "See an example" to preview.</span>`; return; } open(p); };
+$("eye").onclick = () => { const p = $("pin"), s = p.type === "password"; p.type = s ? "text" : "password"; $("eye").textContent = s ? "🙈 Hide" : "👁 Show"; };
 $("pin").onkeydown = e => { if (e.key === "Enter") $("go").click(); };
 $("refresh").onclick = () => { if (DEMO) return render(); let p = ""; try { p = sessionStorage.getItem("wpl-pin") || ""; } catch (e) {} if (p) open(p); };
 $("logout").onclick = () => { try { sessionStorage.removeItem("wpl-pin"); } catch (e) {} ROWS = []; $("dash").hidden = true; $("login").hidden = false; $("pin").value = ""; $("lmsg").textContent = ""; };
