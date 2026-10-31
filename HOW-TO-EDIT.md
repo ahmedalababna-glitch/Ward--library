@@ -11,7 +11,8 @@ https://ahmedalababna-glitch.github.io/Ward--library/
    The number is the correct option, counted from 0 (0 = first, 1 = second, 2 = third, 3 = fourth).
 3. Change the text, keep the quotes and commas, then tap **Commit changes**.
 
-`QUIZ` holds the 4 questions under each video. `TEST` holds the 10 before/after questions.
+`QUIZ` holds the 5 pre/post-test questions for each procedure (the same questions before and after the video).
+If you change questions after staff have started, results before and after the change are no longer comparable.
 
 ## 2. Change a step name in the step list
 
@@ -29,7 +30,12 @@ If a procedure changes, the simplest route is a new video with the same file nam
 
 Video names: ngt, cath, peg, seiz, cvc, lp, trach, cdi, cdr, tpn (all `.mp4`).
 
-## 4. Rebuild the animations (needs a computer or an AI assistant)
+## 4. Results and the Admin page
+
+Test results are saved to a Google Sheet in the owner's Google account (see `setup/HOW-TO-RESULTS.md`).
+The Admin page (`admin.html`, link at the bottom of the library) shows the analysis; it needs the PIN set in that script.
+
+## 5. Rebuild the animations (needs a computer or an AI assistant)
 
 The `source` folder holds everything used to make the animated videos: the scenes for each
 procedure (`<name>_scenes.js`), the voice-over text (`<name>_narr.json`) and the build scripts.
@@ -40,6 +46,6 @@ re-render the video from these files.
 
 ## بالعربي باختصار
 
-- **تغيير سؤال:** افتح `quiz-data.js` ← القلم ← غيّر النص ← Commit changes. الرقم بعد الخيارات هو الجواب الصح (0 = الأول، 1 = الثاني…).
+- **تغيير سؤال (أسئلة الـ pre/post لكل procedure):** افتح `quiz-data.js` ← القلم ← غيّر النص ← Commit changes. الرقم بعد الخيارات هو الجواب الصح (0 = الأول، 1 = الثاني…).
 - **تغيير فيديو:** صوّر أو عدّل الفيديو الجديد، وارفعه بنفس الاسم داخل فولدر `videos` (Add file ← Upload files).
 - **تعديل الأنيميشن نفسه:** الملفات الأصلية بفولدر `source`، وأي مبرمج أو أداة ذكاء اصطناعي بتقدر تعدّل المشهد وتطلع الفيديو من جديد.

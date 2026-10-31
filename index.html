@@ -72,6 +72,13 @@ video { width: 100%; height: 100%; display: block; background: #000; }
 .score.pass { color: var(--green); } .score.fail { color: var(--red); }
 .toplinks { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .toplinks a { text-decoration: none; }
+.steps3 { display: flex; gap: 6px; margin: 0 0 4px; flex-wrap: wrap; }
+.steps3 span { flex: 1; min-width: 90px; text-align: center; font-size: 13px; font-weight: 700; padding: 8px 6px; border-radius: 10px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.steps3 span.ok { background: var(--green-soft); color: var(--green); border-color: transparent; }
+.steps3 span.now { background: var(--teal); color: #fff; border-color: transparent; }
+.who { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+.who input { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 12px; padding: 10px 12px; font: inherit; min-width: 200px; }
+.conf { display: flex; gap: 6px; } .conf .opt { flex: 1; justify-content: center; padding: 8px 0; }
 footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
 </style>
 </head>
@@ -82,10 +89,10 @@ footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
     <div>
       <div class="eyebrow">Ward Procedure Library</div>
       <h1>General Medical Ward competencies</h1>
-      <p class="sub">Module 04 · RMS.NUR.NCM.MW.MOD.004 · Watch the video, take the quiz, then get signed off. <span class="pill draft">Draft for review</span></p>
-      <div class="toplinks"><a class="btn primary" href="test.html">Before / after test</a></div>
+      <p class="sub">Module 04 · RMS.NUR.NCM.MW.MOD.004 · For each procedure: pre-test, watch the video, post-test, then supervised sign-off. <span class="pill draft">Draft for review</span></p>
+      <div class="toplinks" id="whobox"></div>
     </div>
-    <div class="progress"><div class="sub">Videos watched on this device</div><div class="n" id="pcount">0 / 10</div><div class="bar"><i id="pbar" style="width:0%"></i></div></div>
+    <div class="progress"><div class="sub">Procedures passed (post-test)</div><div class="n" id="pcount">0 / 10</div><div class="bar"><i id="pbar" style="width:0%"></i></div></div>
   </header>
 
   <main id="home"><div class="grid" id="grid"></div></main>
@@ -94,46 +101,90 @@ footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
     <button class="back" id="back">← All procedures</button>
     <div class="layout">
       <div>
-        <div class="vbox"><video id="vid" controls playsinline preload="metadata"></video></div>
+        <div class="steps3" id="steps3"></div>
+        <div class="quiz" id="prompt" hidden></div>
+        <div class="vbox" style="margin-top:12px"><video id="vid" controls playsinline preload="metadata"></video></div>
         <h2 class="ptitle" id="ptitle"></h2>
         <div class="sub" id="pcode"></div>
-        <div class="actions"><button class="btn primary" id="markbtn">Mark as watched</button><button class="btn" id="quizbtn">Take the quiz</button><button class="btn" id="nextbtn">Next procedure →</button></div>
         <div class="quiz" id="quiz" hidden></div>
+        <div class="actions"><button class="btn primary" id="prebtn">1 · Pre-test</button><button class="btn" id="postbtn">3 · Post-test</button><button class="btn" id="nextbtn">Next procedure →</button></div>
       </div>
       <aside class="chapters"><h4>Steps · tap to jump</h4><div id="chlist"></div></aside>
     </div>
   </section>
 
-  <footer>Draft for review. Videos follow the Module 04 competency checklists; red steps are critical points (bold items, or safety and infection control). Always follow hospital policy. Practise on a manikin first, then under supervision.</footer>
+  <footer>Draft for review. Videos follow the Module 04 competency checklists; red steps are critical points (bold items, or safety and infection control). Always follow hospital policy. Practise on a manikin first, then under supervision. · <a href="admin.html" style="color:inherit">Admin</a></footer>
 </div>
 
 
 
 <script src="quiz-data.js"></script>
+<script src="config.js"></script>
 <script>
 const PROCS = [{"id": "ngt", "name": "Nasogastric tube: insertion, care and removal", "code": "RMS.NCC.MW.F.007"}, {"id": "cath", "name": "Urinary catheter: insertion, maintenance and removal", "code": "RMS.NCC.MW.F.010"}, {"id": "peg", "name": "PEG tube care", "code": "RMS.NCC.MW.F.009"}, {"id": "seiz", "name": "Care of the patient with seizures", "code": "RMS.NCC.MW.F.008"}, {"id": "cvc", "name": "Central line management", "code": "RMS.NCC.MW.F.001"}, {"id": "lp", "name": "Assisting with lumbar puncture", "code": "RMS.NCC.MW.F.002"}, {"id": "trach", "name": "Tracheostomy care", "code": "RMS.NCC.MW.F.003"}, {"id": "cdi", "name": "Assisting with chest drain insertion", "code": "RMS.NCC.MW.F.004"}, {"id": "cdr", "name": "Chest drain monitoring, care and removal", "code": "RMS.NCC.MW.F.005"}, {"id": "tpn", "name": "Total parenteral nutrition (TPN)", "code": "RMS.NCC.MW.F.006"}];
 const META = {"ngt": {"steps": [{"t": "Know when and which tube", "crit": false, "warn": false, "at": 5.7}, {"t": "Prepare for insertion", "crit": false, "warn": false, "at": 21.6}, {"t": "Measure and mark the tube", "crit": false, "warn": false, "at": 33.6}, {"t": "Insert and secure temporarily", "crit": false, "warn": false, "at": 41.6}, {"t": "Confirm placement: pH", "crit": true, "warn": false, "at": 53.4}, {"t": "Never use these to check placement", "crit": true, "warn": false, "at": 69.3}, {"t": "Mark and record the exit site", "crit": true, "warn": false, "at": 79.2}, {"t": "Secure the tube", "crit": false, "warn": false, "at": 89.3}, {"t": "Before every feed or medicine", "crit": false, "warn": false, "at": 96.2}, {"t": "Ongoing care", "crit": false, "warn": false, "at": 112.2}, {"t": "Remove the tube safely", "crit": false, "warn": false, "at": 124}, {"t": "Care for the person", "crit": false, "warn": false, "at": 133.4}, {"t": "Document and hand over", "crit": false, "warn": false, "at": 142.4}], "total": 155.46}, "cath": {"steps": [{"t": "Know the rules first", "crit": false, "warn": false, "at": 6.1}, {"t": "Choose the right catheter", "crit": false, "warn": false, "at": 24}, {"t": "Prepare for insertion", "crit": false, "warn": false, "at": 34.3}, {"t": "Strict asepsis throughout", "crit": true, "warn": false, "at": 43.3}, {"t": "Test the balloon before insertion", "crit": false, "warn": false, "at": 55.3}, {"t": "Insert gently. Never force.", "crit": true, "warn": false, "at": 63.6}, {"t": "Keep the system closed and sterile", "crit": true, "warn": false, "at": 77.1}, {"t": "Secure to the leg", "crit": false, "warn": false, "at": 86.5}, {"t": "Bag below the bladder, off the floor", "crit": false, "warn": false, "at": 93.5}, {"t": "Observe and encourage fluids", "crit": false, "warn": false, "at": 102.6}, {"t": "Remove the catheter", "crit": false, "warn": false, "at": 113.3}, {"t": "After removal: watch for voiding", "crit": false, "warn": false, "at": 129.9}, {"t": "Infants: position and clean", "crit": true, "warn": false, "at": 141.6}, {"t": "Care for the person", "crit": false, "warn": false, "at": 153.5}, {"t": "Document and report", "crit": false, "warn": false, "at": 164}], "total": 181.08999999999997}, "peg": {"steps": [{"t": "Know the PEG tube", "crit": false, "warn": false, "at": 6.2}, {"t": "Assemble the equipment", "crit": false, "warn": false, "at": 20.8}, {"t": "Prepare the patient", "crit": false, "warn": false, "at": 34.1}, {"t": "Remove the old dressing", "crit": false, "warn": false, "at": 49.1}, {"t": "Clean the stoma aseptically", "crit": true, "warn": false, "at": 64.4}, {"t": "Rotate and replace the bumper", "crit": false, "warn": false, "at": 87}, {"t": "Dressing rules", "crit": false, "warn": false, "at": 95}, {"t": "Before the first feed", "crit": true, "warn": false, "at": 115}, {"t": "Check residual and patency", "crit": false, "warn": false, "at": 130.7}, {"t": "Feeding and flushing", "crit": false, "warn": false, "at": 142.8}, {"t": "Watch for intolerance", "crit": false, "warn": false, "at": 156.1}, {"t": "Give medicines safely", "crit": false, "warn": false, "at": 167.5}, {"t": "Care for the person", "crit": false, "warn": false, "at": 176.9}, {"t": "Document and report", "crit": false, "warn": false, "at": 187.2}], "total": 205.13}, "seiz": {"steps": [{"t": "Know the seizure types", "crit": false, "warn": false, "at": 5.6}, {"t": "Know the risk factors", "crit": false, "warn": false, "at": 21.3}, {"t": "Seizure precautions", "crit": true, "warn": false, "at": 32.3}, {"t": "Have the bedside ready", "crit": true, "warn": false, "at": 44.4}, {"t": "Know the medicines", "crit": false, "warn": false, "at": 59.7}, {"t": "During a seizure: keep them safe", "crit": true, "warn": false, "at": 76}, {"t": "Observe and time it", "crit": true, "warn": false, "at": 95.2}, {"t": "Never put anything in the mouth", "crit": true, "warn": false, "at": 107.2}, {"t": "Turn on the side", "crit": true, "warn": false, "at": 120.8}, {"t": "IV and oxygen if ordered", "crit": true, "warn": false, "at": 130.8}, {"t": "After the seizure", "crit": false, "warn": false, "at": 144.5}, {"t": "Status epilepticus", "crit": false, "warn": true, "at": 164.3}, {"t": "Care for the person", "crit": false, "warn": false, "at": 177}, {"t": "Document the seizure", "crit": false, "warn": false, "at": 186.6}], "total": 206.66}, "cvc": {"steps": [{"t": "Know the central lines", "crit": false, "warn": false, "at": 7}, {"t": "Know the risks", "crit": false, "warn": false, "at": 21.4}, {"t": "Prepare to assist insertion", "crit": false, "warn": false, "at": 37.3}, {"t": "Full sterile barrier", "crit": true, "warn": false, "at": 55.6}, {"t": "Sterile set-up", "crit": true, "warn": false, "at": 69.5}, {"t": "During and after insertion", "crit": false, "warn": false, "at": 83.2}, {"t": "Watch the site", "crit": false, "warn": false, "at": 103.3}, {"t": "Flush the line", "crit": false, "warn": false, "at": 111.3}, {"t": "Blood sample: prepare", "crit": true, "warn": false, "at": 124.3}, {"t": "Blood sample: draw and flush", "crit": false, "warn": false, "at": 147.7}, {"t": "Heparin lock for Vascath", "crit": true, "warn": false, "at": 163.1}, {"t": "Remove the line safely", "crit": false, "warn": false, "at": 178.4}, {"t": "Care for the person", "crit": false, "warn": false, "at": 199.7}, {"t": "Document and report", "crit": false, "warn": false, "at": 210.1}], "total": 230.16000000000003}, "lp": {"steps": [{"t": "Know the procedure", "crit": false, "warn": false, "at": 4.9}, {"t": "Prepare the patient", "crit": false, "warn": false, "at": 18.7}, {"t": "Position and hold safely", "crit": true, "warn": false, "at": 32.3}, {"t": "Assist with aseptic technique", "crit": true, "warn": false, "at": 48.6}, {"t": "Needle into the CSF space", "crit": false, "warn": false, "at": 60.3}, {"t": "Measure the pressure", "crit": false, "warn": false, "at": 73}, {"t": "Collect the CSF samples", "crit": false, "warn": false, "at": 81.1}, {"t": "After the needle is out", "crit": false, "warn": false, "at": 91.6}, {"t": "Observe after the procedure", "crit": true, "warn": false, "at": 107.1}, {"t": "Care for the person", "crit": false, "warn": false, "at": 126.5}, {"t": "Document and report", "crit": false, "warn": false, "at": 137.9}], "total": 162.35000000000002}, "trach": {"steps": [{"t": "Know the tube", "crit": false, "warn": false, "at": 5.8}, {"t": "Know the complications", "crit": false, "warn": false, "at": 19.4}, {"t": "Keep the airway clear", "crit": false, "warn": false, "at": 34.6}, {"t": "Prepare the patient", "crit": false, "warn": false, "at": 48.8}, {"t": "Remove the soiled dressing", "crit": false, "warn": false, "at": 68.3}, {"t": "Change the tapes: hold the tube", "crit": true, "warn": false, "at": 76.3}, {"t": "Clean the stoma aseptically", "crit": true, "warn": false, "at": 87.9}, {"t": "New dressing and finish", "crit": false, "warn": false, "at": 103.5}, {"t": "Care for the person", "crit": false, "warn": false, "at": 118.6}, {"t": "Document and report", "crit": false, "warn": false, "at": 130.2}], "total": 155.67}, "cdi": {"steps": [{"t": "Know why it is needed", "crit": false, "warn": false, "at": 5.3}, {"t": "Know the procedure and risks", "crit": false, "warn": false, "at": 14.3}, {"t": "Prepare the patient", "crit": false, "warn": false, "at": 34.6}, {"t": "Prepare the water seal", "crit": true, "warn": false, "at": 55.8}, {"t": "Sterile field; assist the doctor", "crit": true, "warn": false, "at": 68.6}, {"t": "Connect the system", "crit": false, "warn": false, "at": 79.1}, {"t": "Chest X-ray urgently", "crit": true, "warn": false, "at": 90.6}, {"t": "Monitor after insertion", "crit": true, "warn": false, "at": 102}, {"t": "Sudden deterioration", "crit": false, "warn": true, "at": 119.9}, {"t": "Care for the person", "crit": false, "warn": false, "at": 130.4}, {"t": "Document the procedure", "crit": false, "warn": false, "at": 140.1}], "total": 161.93999999999997}, "cdr": {"steps": [{"t": "Know the drain", "crit": false, "warn": false, "at": 6.3}, {"t": "Spot complications", "crit": false, "warn": false, "at": 23.6}, {"t": "Check the system", "crit": false, "warn": false, "at": 36.3}, {"t": "Ready for removal?", "crit": false, "warn": false, "at": 49.1}, {"t": "Prepare for removal", "crit": false, "warn": false, "at": 60.2}, {"t": "More than one drain?", "crit": true, "warn": false, "at": 77.1}, {"t": "Aseptic site care", "crit": true, "warn": false, "at": 87.7}, {"t": "Remove with the breath", "crit": true, "warn": false, "at": 103.2}, {"t": "Seal and check", "crit": false, "warn": false, "at": 119.3}, {"t": "Care for the person", "crit": false, "warn": false, "at": 132}, {"t": "Document the care", "crit": false, "warn": false, "at": 144.9}], "total": 166.82}, "tpn": {"steps": [{"t": "Know TPN", "crit": false, "warn": false, "at": 6.6}, {"t": "Know the risks", "crit": false, "warn": false, "at": 23.6}, {"t": "Prepare the patient", "crit": false, "warn": false, "at": 43.3}, {"t": "Check the label with a second nurse", "crit": true, "warn": false, "at": 62.3}, {"t": "Two-person aseptic set-up", "crit": true, "warn": false, "at": 73.7}, {"t": "Connect and protect the line", "crit": true, "warn": false, "at": 89.9}, {"t": "Set the pump", "crit": false, "warn": false, "at": 106}, {"t": "Monitor closely", "crit": true, "warn": false, "at": 116.4}, {"t": "Never leave TPN unattended", "crit": true, "warn": false, "at": 132.5}, {"t": "Care for the person", "crit": false, "warn": false, "at": 145.5}, {"t": "Document and report", "crit": false, "warn": false, "at": 158.7}], "total": 185.69}};
 const $ = id => document.getElementById(id);
-let done = {}, qs = {};
-try { qs = JSON.parse(localStorage.getItem("wpl-quiz") || "{}"); } catch (e) { qs = {}; }
-try { done = JSON.parse(localStorage.getItem("wpl-watched") || "{}"); } catch (e) { done = {}; }
-const save = () => { try { localStorage.setItem("wpl-watched", JSON.stringify(done)); } catch (e) {} };
+let done = {}, tests = {}, who = "";
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || d); } catch (e) { return JSON.parse(d); } };
+const store = (k, v) => { try { localStorage.setItem(k, typeof v === "string" ? v : JSON.stringify(v)); } catch (e) {} };
+done = load("wpl-watched", "{}"); tests = load("wpl-tests", "{}");
+try { who = localStorage.getItem("wpl-who") || ""; } catch (e) {}
+const save = () => store("wpl-watched", done);
 const fmt = s => { s = Math.round(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const PASS = 4;
+
+// ---- sending results (queued if offline) ----
+const HAS_SERVER = typeof RESULTS_URL !== "undefined" && !!RESULTS_URL;
+function flush() {
+  if (!HAS_SERVER) return;
+  const q = load("wpl-outbox", "[]"); if (!q.length) return;
+  const item = q[0];
+  fetch(RESULTS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(item) })
+    .then(() => { const r = load("wpl-outbox", "[]"); r.shift(); store("wpl-outbox", r); if (r.length) flush(); })
+    .catch(() => {});
+}
+function send(rec) { if (!HAS_SERVER) return; const q = load("wpl-outbox", "[]"); q.push(rec); store("wpl-outbox", q); flush(); }
+window.addEventListener("online", flush);
+
+// ---- who is taking the tests ----
+function whoBox() {
+  const box = $("whobox");
+  if (who) { box.innerHTML = `<div class="who"><span class="tag done">Name: ${esc(who)}</span><button class="back" id="whochange" style="margin:0">Change</button></div>`; $("whochange").onclick = () => { who = ""; whoBox(); }; }
+  else {
+    box.innerHTML = `<div class="who"><input id="whoin" placeholder="Your name or staff number" autocomplete="name"><button class="btn primary" id="whosave">Save</button></div><div class="sub">Needed once, so your pre and post results can be matched.</div>`;
+    $("whosave").onclick = () => { const v = $("whoin").value.trim(); if (!v) return; who = v.slice(0, 60); try { localStorage.setItem("wpl-who", who); } catch (e) {} whoBox(); if (cur) stepper(); };
+  }
+}
+
 function progress() {
-  const n = PROCS.filter(p => done[p.id]).length;
+  const n = PROCS.filter(p => tests[p.id] && tests[p.id].post && tests[p.id].post.score >= PASS).length;
   $("pcount").textContent = n + " / " + PROCS.length;
   $("pbar").style.width = (100 * n / PROCS.length) + "%";
 }
 function home() {
   $("grid").innerHTML = PROCS.map((p, i) => {
-    const m = META[p.id], crit = m.steps.filter(s => s.crit).length;
+    const m = META[p.id], crit = m.steps.filter(s => s.crit).length, r = tests[p.id] || {};
+    const pre = r.pre ? `<span class="tag">Pre ${r.pre.score}/5</span>` : "";
+    const post = r.post ? `<span class="tag ${r.post.score >= PASS ? "done" : "crit"}">Post ${r.post.score}/5</span>` : "";
     return `<button class="card" data-id="${p.id}"><span class="num">${i + 1}</span><h3>${p.name}</h3><span class="code">${p.code}</span>
-      <span class="meta"><span class="tag">${fmt(m.total)} min</span><span class="tag">${m.steps.length} steps</span>${crit ? `<span class="tag crit">${crit} critical</span>` : ""}${done[p.id] ? `<span class="tag done">Watched ✓</span>` : ""}${qs[p.id] != null ? `<span class="tag ${qs[p.id] >= 3 ? "done" : "crit"}">Quiz ${qs[p.id]}/4</span>` : ""}</span></button>`;
+      <span class="meta"><span class="tag">${fmt(m.total)} min</span><span class="tag">${m.steps.length} steps</span>${crit ? `<span class="tag crit">${crit} critical</span>` : ""}${done[p.id] ? `<span class="tag done">Watched ✓</span>` : ""}${pre}${post}</span></button>`;
   }).join("");
   document.querySelectorAll(".card").forEach(c => c.onclick = () => openP(c.dataset.id));
   progress();
 }
 let cur = null;
+function stepper() {
+  const r = tests[cur] || {}, pre = !!r.pre, w = !!done[cur], post = !!r.post;
+  const passed = post && r.post.score >= PASS;
+  $("steps3").innerHTML = `<span class="${pre ? "ok" : "now"}">1 · Pre-test ${pre ? "✓" : ""}</span><span class="${w ? "ok" : pre ? "now" : ""}">2 · Watch ${w ? "✓" : ""}</span><span class="${passed ? "ok" : pre ? "now" : ""}">3 · Post-test ${passed ? "✓" : ""}</span>`;
+  $("prebtn").hidden = pre;
+  $("postbtn").textContent = post ? "3 · Retake post-test" : "3 · Post-test";
+  $("postbtn").disabled = !pre;
+  const pr = $("prompt");
+  if (!pre) { pr.hidden = false; pr.innerHTML = `<h3>Start with the pre-test</h3><div class="sub">5 short questions about this procedure, before you watch. It shows what you already know. About 2 minutes.</div><div class="actions"><button class="btn primary" id="prestart">Start the pre-test</button></div>`; $("prestart").onclick = () => renderTest("pre"); }
+  else pr.hidden = true;
+}
 function openP(id) {
   cur = id;
   const p = PROCS.find(x => x.id === id), m = META[id], v = $("vid");
@@ -143,46 +194,66 @@ function openP(id) {
   $("chlist").innerHTML = m.steps.map((s, i) => `<button class="ch ${s.crit ? "crit" : ""}" data-at="${s.at}"><span class="i">${s.warn ? "!" : i + 1}</span><span>${s.t}${s.crit ? `<span class="cl">CRITICAL POINT</span>` : ""}</span><span class="tm">${fmt(s.at)}</span></button>`).join("");
   document.querySelectorAll(".ch").forEach(c => c.onclick = () => { v.currentTime = +c.dataset.at + 0.2; v.play(); });
   $("quiz").hidden = true; $("quiz").innerHTML = "";
-  markBtn(); window.scrollTo(0, 0);
+  stepper(); window.scrollTo(0, 0);
   try { history.replaceState(null, "", "#" + id); } catch (e) {}
 }
-function markBtn() { const b = $("markbtn"); b.textContent = done[cur] ? "Watched ✓" : "Mark as watched"; b.disabled = !!done[cur]; }
 function closeP() { $("vid").pause(); $("player").classList.remove("on"); $("home").style.display = ""; cur = null; home(); try { history.replaceState(null, "", "#"); } catch (e) {} }
 $("back").onclick = closeP;
-$("quizbtn").onclick = () => { $("vid").pause(); renderQuiz(); };
-function renderQuiz() {
-  const box = $("quiz"), qz = QUIZ[cur].map(q => { const o = q[1].map((x, j) => [x, j]).sort(() => Math.random() - 0.5); return [q[0], o.map(x => x[0]), o.findIndex(x => x[1] === q[2]), q[3]]; });
+$("prebtn").onclick = () => renderTest("pre");
+$("postbtn").onclick = () => renderTest("post");
+
+// ---- pre / post test: same 5 questions; answers shown only after the post-test ----
+function renderTest(kind) {
+  $("vid").pause();
+  const box = kind === "pre" ? $("prompt") : $("quiz");
+  if (kind === "pre") $("quiz").hidden = true; else $("prompt").hidden = true;
+  if (!who) { box.hidden = false; box.innerHTML = `<h3>Add your name first</h3><div class="sub">Type your name or staff number at the top of the page, then come back.</div><div class="actions"><button class="btn primary" id="gotop">Go to the top</button></div>`; $("gotop").onclick = () => { closeP(); window.scrollTo(0, 0); setTimeout(() => $("whoin") && $("whoin").focus(), 300); }; return; }
+  const P = PROCS.find(x => x.id === cur);
+  const qz = QUIZ[cur].map(q => { const o = q[1].map((x, j) => [x, j]).sort(() => Math.random() - 0.5); return [q[0], o.map(x => x[0]), o.findIndex(x => x[1] === q[2]), q[3]]; });
   box.hidden = false;
-  box.innerHTML = `<h3>Quiz</h3><div class="sub">${qz.length} questions. Pass mark 3 / 4.</div>` + qz.map((q, i) =>
-    `<div class="q"><p>${i + 1}. ${q[0]}</p>${q[1].map((o, j) => `<label class="opt"><input type="radio" name="q${i}" value="${j}"><span>${o}</span></label>`).join("")}<div class="why" id="why${i}"></div></div>`).join("") +
-    `<button class="btn primary" id="qsubmit">Check answers</button><div id="qres"></div>`;
+  box.innerHTML = `<h3>${kind === "pre" ? "Pre-test" : "Post-test"} · ${esc(P.name)}</h3><div class="sub">${kind === "pre" ? "Before watching. Answer what you know now; it is fine to guess." : "After watching. Pass mark " + PASS + " / 5."}</div>` +
+    `<div class="q"><p>How confident are you to do this procedure on your own today?</p><div class="conf">${[1, 2, 3, 4, 5].map(v => `<label class="opt"><input type="radio" name="conf" value="${v}"><span>${v}</span></label>`).join("")}</div><div class="sub">1 = not confident at all · 5 = fully confident</div></div>` +
+    qz.map((q, i) => `<div class="q"><p>${i + 1}. ${q[0]}</p>${q[1].map((o, j) => `<label class="opt"><input type="radio" name="q${i}" value="${j}"><span>${o}</span></label>`).join("")}<div class="why" id="why${i}"></div></div>`).join("") +
+    `<button class="btn primary" id="qsubmit">${kind === "pre" ? "Save pre-test" : "Check answers"}</button><div id="qerr" class="sub"></div><div id="qres"></div>`;
   $("qsubmit").onclick = () => {
-    let n = 0;
+    const ce = box.querySelector("input[name=conf]:checked");
+    const sels = qz.map((_, i) => box.querySelector(`input[name=q${i}]:checked`));
+    if (!ce || sels.includes(null)) { $("qerr").textContent = "Please answer every question, including confidence."; return; }
+    const correct = qz.map((q, i) => +sels[i].value === q[2] ? 1 : 0), score = correct.reduce((a, b) => a + b, 0), conf = +ce.value;
+    tests[cur] = tests[cur] || {};
+    const attempt = kind === "post" ? ((tests[cur].post && tests[cur].post.attempt) || 0) + 1 : 1;
+    tests[cur][kind] = { score, conf, attempt, date: new Date().toISOString() };
+    store("wpl-tests", tests);
+    send({ who, proc: cur, stage: kind === "pre" ? "PRE" : "POST", attempt, score, conf, correct });
+    box.querySelectorAll("input").forEach(o => o.disabled = true);
+    $("qsubmit").remove(); $("qerr").textContent = "";
+    const saved = HAS_SERVER ? " Saved for your QI lead ✓" : "";
+    if (kind === "pre") {
+      $("qres").innerHTML = `<div class="score pass">Pre-test saved: ${score} / 5.${saved}</div><div class="sub">Now watch the video, then take the post-test.</div>`;
+      stepper(); $("prompt").hidden = false; $("vid").scrollIntoView({ behavior: "smooth" });
+      return;
+    }
     qz.forEach((q, i) => {
-      const sel = box.querySelector(`input[name=q${i}]:checked`), opts = box.querySelectorAll(`input[name=q${i}]`);
-      opts.forEach((o, j) => { o.disabled = true; o.parentNode.classList.toggle("right", j === q[2]); if (sel && +sel.value === j && j !== q[2]) o.parentNode.classList.add("wrong"); });
-      if (sel && +sel.value === q[2]) n++;
+      box.querySelectorAll(`input[name=q${i}]`).forEach((o, j) => { o.parentNode.classList.toggle("right", j === q[2]); if (+sels[i].value === j && j !== q[2]) o.parentNode.classList.add("wrong"); });
       $("why" + i).textContent = q[3];
     });
-    qs[cur] = n; try { localStorage.setItem("wpl-quiz", JSON.stringify(qs)); } catch (e) {}
-    const pass = n >= 3;
-    $("qres").innerHTML = `<div class="score ${pass ? "pass" : "fail"}">${n} / ${qz.length} · ${pass ? "Passed ✓ Ready for supervised sign-off" : "Not yet. Watch the video again and retry"}</div><button class="btn" id="qretry">Try again</button>`;
-    $("qsubmit").remove();
-    $("qretry").onclick = renderQuiz;
+    const pass = score >= PASS, pre = tests[cur].pre;
+    $("qres").innerHTML = `<div class="score ${pass ? "pass" : "fail"}">${score} / 5 · ${pass ? "Passed ✓ Ready for supervised sign-off" : "Not yet. Watch the video again and retry"}</div>${pre ? `<div class="sub">Your pre-test was ${pre.score} / 5.${saved}</div>` : ""}<button class="btn" id="qretry">Try again</button>`;
+    $("qretry").onclick = () => renderTest("post");
+    stepper(); progress();
   };
   box.scrollIntoView({ behavior: "smooth" });
 }
-$("markbtn").onclick = () => { done[cur] = 1; save(); markBtn(); progress(); };
 $("nextbtn").onclick = () => { const i = PROCS.findIndex(p => p.id === cur); openP(PROCS[(i + 1) % PROCS.length].id); };
-$("vid").addEventListener("ended", () => { done[cur] = 1; save(); markBtn(); progress(); });
+$("vid").addEventListener("ended", () => { done[cur] = 1; save(); stepper(); });
 $("vid").addEventListener("timeupdate", () => {
   const t = $("vid").currentTime; let k = -1;
   META[cur].steps.forEach((s, i) => { if (t >= s.at) k = i; });
   document.querySelectorAll(".ch").forEach((c, i) => c.classList.toggle("now", i === k));
+  if (t > 0.9 * $("vid").duration && !done[cur]) { done[cur] = 1; save(); stepper(); }
 });
-home();
+whoBox(); home(); flush();
 const h = location.hash.slice(1); if (PROCS.some(p => p.id === h)) openP(h);
-
 </script>
 
 </body>
