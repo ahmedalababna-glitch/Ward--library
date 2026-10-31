@@ -33,3 +33,15 @@ ffmpeg -i cath_final.mp4 -vf "scale=960:540,fps=15" -c:v libx264 -crf 32 -tune a
 ```
 
 `IN=cath.html node stills.js` makes still previews to check the layout before a full render.
+
+## Final timed pages (current videos)
+
+`final/<name>_v.html` are the exact pages used for the current videos, with the realistic equipment
+drawings and the scene timings already matched to the voice-over. To change a drawing, edit the
+page and re-render it directly (no need to rerun build.py or narrate.py):
+
+```
+IN=final/cath_v.html OUT=cath_v.mp4 node render.js
+```
+then mux with the existing `cath_audio.wav` as above. To change the voice-over text, use the
+`_scenes.js` / `_narr.json` route and copy the drawing functions across from the final page.

@@ -1,0 +1,328 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: "PlexAr"; src: url("ibm-plex-sans-arabic-arabic-400-normal.woff2"); font-weight: 400; }
+@font-face { font-family: "PlexAr"; src: url("ibm-plex-sans-arabic-arabic-700-normal.woff2"); font-weight: 700; }
+html, body { margin: 0; background: #F3F6F7; }
+svg { display: block; }
+</style></head>
+<body>
+<svg id="root" width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg"></svg>
+<script>
+const C = { bg: "#F3F6F7", ink: "#12262B", muted: "#5E747A", teal: "#0B6E75", tealSoft: "#DCEFEF", red: "#D0453D", redSoft: "#FBE3E1", green: "#1F8A4C", greenSoft: "#DDF2E5",
+  line: "#DCE4E6", skinT: "#F3C9A8", skin: "#EBB792", skinB: "#D9A27E", skinEdge: "#C98F68", vein: "#4F72B8", glove: "#6F8FE0", gloveEdge: "#4D68B8", pink: "#E8679E", steel: "#9AA5AD", yellow: "#F2C200" };
+const FONT = "Inter, 'Liberation Sans', sans-serif", AR = "PlexAr, sans-serif";
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const seg = (t, a, b) => ease((t - a) / (b - a));
+const lerp = (a, b, k) => a + (b - a) * k;
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const T = (x, y, s, o = {}) => `<text x="${x}" y="${y}" font-family="${o.ar ? AR : FONT}" font-size="${o.size || 32}" font-weight="${o.w || 400}" fill="${o.fill || C.ink}" text-anchor="${o.anchor || "start"}" ${o.ar ? 'direction="rtl"' : ""} ${o.ls ? `letter-spacing="${o.ls}"` : ""} opacity="${o.op ?? 1}">${esc(s)}</text>`;
+
+// ---------- shared drawings (card space 1120 x 840) ----------
+const SITE = { x: 620, y: 428 };
+function armTop() {
+  return `<defs><linearGradient id="skinG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C.skinT}"/><stop offset=".55" stop-color="${C.skin}"/><stop offset="1" stop-color="${C.skinB}"/></linearGradient></defs>
+  <path d="M -40 300 C 300 294, 700 310, 960 336 L 960 534 C 700 554, 300 566, -40 566 Z" fill="url(#skinG)" stroke="${C.skinEdge}" stroke-width="3"/>
+  <path d="M 940 330 C 1040 318, 1120 345, 1180 382 L 1180 500 C 1110 542, 1030 550, 940 540 Z" fill="url(#skinG)" stroke="${C.skinEdge}" stroke-width="3"/>
+  <path d="M -40 442 C 250 424, 450 446, 620 428 S 880 438 960 432" fill="none" stroke="${C.vein}" stroke-width="18" stroke-linecap="round" opacity=".5"/>
+  <path d="M 380 437 C 430 400, 470 380, 540 372" fill="none" stroke="${C.vein}" stroke-width="10" stroke-linecap="round" opacity=".35"/>
+  ${T(30, 620, "Elbow", { size: 24, fill: C.muted })}${T(1060, 600, "Hand", { size: 24, fill: C.muted, anchor: "middle" })}`;
+}
+function cross(x, y, s = 30, op = 1) {
+  return `<g stroke="${C.red}" stroke-width="10" stroke-linecap="round" opacity="${op}"><line x1="${x - s}" y1="${y - s}" x2="${x + s}" y2="${y + s}"/><line x1="${x + s}" y1="${y - s}" x2="${x - s}" y2="${y + s}"/></g>`;
+}
+function tick(x, y, s = 1, op = 1, col = C.green) {
+  return `<g transform="translate(${x} ${y}) scale(${s})" opacity="${op}"><circle r="26" fill="${col}"/><path d="M -11 1 l 8 8 l 15 -17" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+}
+function tourniquet(x, op = 1, dy = 0) {
+  return `<g opacity="${op}" transform="translate(0 ${dy})"><rect x="${x - 34}" y="282" width="68" height="302" rx="14" fill="#2E8C8C"/><rect x="${x - 48}" y="400" width="96" height="66" rx="10" fill="#1C3D40"/><rect x="${x - 30}" y="418" width="60" height="30" rx="5" fill="#2E8C8C"/></g>`;
+}
+function cannulaTop(o = {}) {
+  // inserted cannula seen from above: catheter runs under the skin towards the elbow
+  const x = SITE.x, y = SITE.y;
+  let g = `<line x1="${x - 150}" y1="${y}" x2="${x}" y2="${y}" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".55" stroke-dasharray="14 10"/>`;
+  g += `<rect x="${x - 4}" y="${y - 10}" width="30" height="20" rx="6" fill="#fff" stroke="#B9C3C8" stroke-width="2"/>`;
+  g += `<path d="M ${x + 26} ${y - 22} L ${x + 76} ${y - 26} L ${x + 76} ${y + 26} L ${x + 26} ${y + 22} Z" fill="${C.pink}"/>`;
+  g += `<path d="M ${x + 34} ${y - 22} L ${x + 44} ${y - 70} L ${x + 70} ${y - 70} L ${x + 66} ${y - 24} Z M ${x + 34} ${y + 22} L ${x + 44} ${y + 70} L ${x + 70} ${y + 70} L ${x + 66} ${y + 24} Z" fill="${C.pink}" opacity=".9"/>`;
+  if (o.needle) {
+    const nx = (o.nx || 0), ny = (o.ny || 0);
+    g += `<g transform="translate(${nx} ${ny})" opacity="${o.nop ?? 1}"><rect x="${x + 76}" y="${y - 18}" width="70" height="36" rx="6" fill="#fff" stroke="${C.steel}" stroke-width="3"/><rect x="${x + 82}" y="${y - 12}" width="40" height="24" rx="4" fill="${C.red}"/><rect x="${x + 146}" y="${y - 14}" width="80" height="28" rx="6" fill="#C9D2D8"/></g>`;
+  }
+  if (o.cap) g += `<rect x="${x + 76}" y="${y - 14}" width="26" height="28" rx="5" fill="${C.pink}"/>`;
+  return g;
+}
+function sharpsBin(x, y, s = 1) {
+  return `<g transform="translate(${x} ${y}) scale(${s})"><rect x="0" y="20" width="170" height="160" rx="12" fill="${C.yellow}" stroke="#9A7A00" stroke-width="3"/><rect x="-6" y="0" width="182" height="34" rx="8" fill="${C.red}"/><rect x="60" y="6" width="50" height="10" rx="5" fill="#7a1d18"/>${T(85, 118, "SHARPS", { size: 24, w: 800, anchor: "middle", fill: "#3a2f00" })}</g>`;
+}
+function glove(x, y, rx = 60, ry = 36, rot = 0) {
+  return `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" transform="rotate(${rot} ${x} ${y})" fill="${C.glove}" stroke="${C.gloveEdge}" stroke-width="3"/>`;
+}
+function arrow(x1, y1, x2, y2, col = C.ink, w = 6) {
+  const a = Math.atan2(y2 - y1, x2 - x1), h = 18;
+  return `<g stroke="${col}" stroke-width="${w}" stroke-linecap="round" fill="none"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><path d="M ${x2 - h * Math.cos(a - .5)} ${y2 - h * Math.sin(a - .5)} L ${x2} ${y2} L ${x2 - h * Math.cos(a + .5)} ${y2 - h * Math.sin(a + .5)}"/></g>`;
+}
+function callout(x, y, text, op = 1, col = C.ink) {
+  const w = text.length * 15 + 40;
+  return `<g opacity="${op}"><rect x="${x - w / 2}" y="${y - 30}" width="${w}" height="46" rx="10" fill="${col}"/>${T(x, y + 1, text, { size: 26, w: 700, anchor: "middle", fill: "#fff" })}</g>`;
+}
+
+// side cut-away of skin, vein and cannula
+const E = { x: 760, y: 300 };
+function crossSection(st) {
+  let g = `<rect x="0" y="0" width="1120" height="300" fill="#FFFFFF"/>
+    <rect x="0" y="300" width="1120" height="14" fill="#D99B74"/>
+    <rect x="0" y="314" width="1120" height="36" fill="#EDBD9A"/>
+    <rect x="0" y="350" width="1120" height="490" fill="#F6D7BE"/>
+    <rect x="0" y="360" width="1120" height="52" fill="${C.vein}"/>
+    <rect x="0" y="368" width="1120" height="36" fill="#7E9AD4" opacity=".55"/>
+    ${T(24, 296, "Skin surface", { size: 22, fill: C.muted })}
+    ${T(24, 392, "Vein", { size: 24, w: 700, fill: "#fff" })}
+    ${T(24, 470, "Tissue", { size: 22, fill: C.muted })}`;
+  const a = st.a * Math.PI / 180, tx = E.x - st.depth * Math.cos(a), ty = E.y + st.depth * Math.sin(a);
+  let dev = "";
+  if (!st.noNeedle) dev += `<g transform="translate(${st.nOff || 0} 0)" opacity="${st.nOp ?? 1}">
+      <line x1="0" y1="0" x2="640" y2="0" stroke="${C.steel}" stroke-width="5"/>
+      <path d="M 0 0 L 22 -4 L 22 4 Z" fill="${C.steel}"/>
+      <rect x="452" y="-20" width="84" height="40" rx="7" fill="#fff" stroke="${C.steel}" stroke-width="3"/>
+      <rect x="456" y="-16" width="${76 * (st.flash || 0)}" height="32" rx="4" fill="${C.red}"/>
+      <rect x="536" y="-15" width="120" height="30" rx="7" fill="#C9D2D8"/></g>`;
+  dev += `<g transform="translate(${st.cOff || 0} 0)">
+      <rect x="24" y="-8" width="350" height="16" rx="8" fill="#FFFFFF" fill-opacity=".72" stroke="#AEB9BE" stroke-width="2"/>
+      <rect x="372" y="-22" width="82" height="44" rx="9" fill="${C.pink}"/>
+      <rect x="390" y="-40" width="44" height="16" rx="4" fill="${C.pink}"/></g>`;
+  g += `<g transform="translate(${tx} ${ty}) rotate(${-st.a})" opacity="${st.op ?? 1}">${dev}</g>`;
+  // tip position helpers for callouts
+  st._tip = { x: tx, y: ty };
+  st._axis = (d) => ({ x: tx + d * Math.cos(a), y: ty - d * Math.sin(a) });
+  return g;
+}
+
+function checkCards(rows, lt, x = 80, w = 960, h = 140, gap = 170, top = 110, col = C.green) {
+  return rows.map(([hd, sub], i) => {
+    const y = top + i * gap, p = seg(lt, 0.3 + i * 0.6, 0.8 + i * 0.6), tk = seg(lt, 0.9 + i * 0.6, 1.2 + i * 0.6);
+    return `<g opacity="${p}" transform="translate(${x + (1 - p) * 30} ${y})"><rect width="${w}" height="${h}" rx="20" fill="${col === C.red ? C.redSoft : C.bg}"/>${T(150, sub ? 62 : h / 2 + 13, hd, { size: 36, w: 800 })}${sub ? T(150, 104, sub, { size: 27, fill: C.muted }) : ""}${col === C.red ? cross(70, h / 2, 22, tk) : tick(70, h / 2, 0.6 + 0.6 * tk, tk)}</g>`;
+  }).join("");
+}
+
+
+// ---- realistic bedside equipment ----
+function guedel(x, y, s = 1) {
+  // oropharyngeal (Guedel) airway, side view: coloured flange, bite block, curved body
+  const d = `M 30 0 L 90 0 C 170 0, 210 50, 206 150`;
+  return `<g transform="translate(${x} ${y}) scale(${s})"><path d="${d}" fill="none" stroke="#9AA9AE" stroke-width="44" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#F6F8F8" stroke-width="38" stroke-linecap="round"/><path d="M 30 0 L 90 0" stroke="#DCE3E5" stroke-width="38"/><path d="M 40 -10 L 88 -10 C 150 -10, 186 30, 190 100" fill="none" stroke="#fff" stroke-width="6" opacity=".9"/><rect x="6" y="-50" width="26" height="100" rx="8" fill="#F08A24" stroke="#C26A14" stroke-width="3"/><ellipse cx="19" cy="0" rx="7" ry="13" fill="#7A3E0C" opacity=".7"/></g>`;
+}
+function yankauer(x, y, s = 1, rot = 0) {
+  return `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"><path d="M 0 0 L 150 0 C 190 0, 210 20, 230 50" fill="none" stroke="#9FB5BD" stroke-width="22" stroke-linecap="round"/><path d="M 0 0 L 150 0 C 190 0, 210 20, 230 50" fill="none" stroke="#EEF5F7" stroke-width="16" stroke-linecap="round"/><circle cx="234" cy="56" r="13" fill="#EEF5F7" stroke="#9FB5BD" stroke-width="3"/><rect x="-36" y="-12" width="40" height="24" rx="6" fill="#DCE6E9" stroke="#9FB5BD" stroke-width="3"/></g>`;
+}
+function suctionUnit(x, y, s = 1, lvl = 0.15) {
+  // wall vacuum regulator with gauge, collection canister, clear tubing
+  let g = `<g transform="translate(${x} ${y}) scale(${s})">`;
+  g += `<rect x="0" y="0" width="120" height="150" rx="14" fill="#E9EEF0" stroke="#8E9BA0" stroke-width="3"/><circle cx="60" cy="62" r="44" fill="#fff" stroke="#55636A" stroke-width="5"/><path d="M 26 74 A 36 36 0 0 1 60 26" fill="none" stroke="#2FA35B" stroke-width="7"/><path d="M 60 26 A 36 36 0 0 1 94 74" fill="none" stroke="#E0A020" stroke-width="7"/><line x1="60" y1="62" x2="${60 - 22}" y2="${62 - 24}" stroke="#12262B" stroke-width="4" stroke-linecap="round"/><circle cx="60" cy="62" r="5" fill="#12262B"/><rect x="40" y="118" width="40" height="22" rx="6" fill="#55636A"/>`;
+  g += `<rect x="150" y="40" width="130" height="200" rx="18" fill="#EAF4F8" fill-opacity=".85" stroke="#8FA9B3" stroke-width="3"/><rect x="154" y="${236 - 190 * lvl}" width="122" height="${190 * lvl}" rx="12" fill="#E8D9A6" opacity=".9"/><rect x="142" y="26" width="146" height="26" rx="8" fill="#3E7CC4"/>`;
+  for (let i = 1; i < 6; i++) g += `<line x1="160" y1="${236 - i * 32}" x2="${i % 2 ? 176 : 186}" y2="${236 - i * 32}" stroke="#5E747A" stroke-width="2"/>`;
+  g += `<path d="M 120 60 C 135 60, 140 30, 170 30" fill="none" stroke="#9FB5BD" stroke-width="8"/><path d="M 260 30 C 300 -20, 360 20, 360 120 C 360 200, 330 230, 300 260" fill="none" stroke="#B8CBD2" stroke-width="10"/><path d="M 260 30 C 300 -20, 360 20, 360 120 C 360 200, 330 230, 300 260" fill="none" stroke="#F2F8FA" stroke-width="5"/>`;
+  return g + `</g>`;
+}
+function cannula20(x, y, s = 1) {
+  // 20G (pink) IV cannula: wings, injection port cap, flashback chamber, steel needle
+  return `<g transform="translate(${x} ${y}) scale(${s})"><line x1="140" y1="0" x2="300" y2="0" stroke="#B7C1C6" stroke-width="5"/><path d="M 140 -8 L 260 -5 L 270 0 L 260 5 L 140 8 Z" fill="#F1F5F6" fill-opacity=".9" stroke="#AAB6BA" stroke-width="2"/><path d="M 70 -10 L 150 -10 L 150 10 L 70 10 Z" fill="#F7B2C9" stroke="#D6719A" stroke-width="2.5"/><path d="M 90 -10 L 70 -54 L 130 -54 L 128 -10 Z M 90 10 L 70 54 L 130 54 L 128 10 Z" fill="#F7B2C9" stroke="#D6719A" stroke-width="2.5"/><rect x="96" y="-36" width="26" height="26" rx="6" fill="#EE7FA6" stroke="#C8577F" stroke-width="2.5"/><rect x="0" y="-14" width="70" height="28" rx="6" fill="#F6F8F8" stroke="#9AA9AE" stroke-width="2.5"/><rect x="-30" y="-10" width="34" height="20" rx="5" fill="#F7B2C9" stroke="#D6719A" stroke-width="2.5"/>${T(110, 84, "20G", { size: 22, w: 800, anchor: "middle", fill: "#C8577F" })}</g>`;
+}
+function blister(x, y, s = 1) {
+  let g = `<g transform="translate(${x} ${y}) scale(${s})"><rect width="230" height="130" rx="10" fill="#D7DDE0" stroke="#9AA6AB" stroke-width="3"/>`;
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 5; c++) g += `<ellipse cx="${30 + c * 43}" cy="${38 + r * 54}" rx="16" ry="20" fill="#F5F7F8" stroke="#A9B4B8" stroke-width="2"/><ellipse cx="${30 + c * 43}" cy="${38 + r * 54}" rx="9" ry="13" fill="#F2F2EE" stroke="#C8CCC4" stroke-width="2"/>`;
+  return g + `</g>`;
+}
+function nsBag(x, y, s = 1, lvl = 0.8) {
+  let g = `<g transform="translate(${x} ${y}) scale(${s})"><rect x="40" y="-20" width="40" height="20" rx="6" fill="none" stroke="#9AA9AE" stroke-width="4"/><path d="M 0 0 L 120 0 L 120 200 C 120 230, 90 250, 60 250 C 30 250, 0 230, 0 200 Z" fill="#EEF6FA" fill-opacity=".9" stroke="#8FA9B3" stroke-width="3"/><path d="M 4 ${200 - 180 * lvl + 20} L 116 ${200 - 180 * lvl + 20} L 116 200 C 116 226, 90 246, 60 246 C 30 246, 4 226, 4 200 Z" fill="#DCEEF8"/>`;
+  g += `<rect x="16" y="40" width="88" height="70" rx="6" fill="#fff" stroke="#3E7CC4" stroke-width="2"/>${T(60, 70, "0.9%", { size: 20, w: 800, anchor: "middle", fill: "#1F5FA8" })}${T(60, 96, "NaCl", { size: 18, w: 700, anchor: "middle", fill: "#1F5FA8" })}`;
+  g += `<rect x="50" y="250" width="20" height="24" fill="#F4F7F8" stroke="#9AA9AE" stroke-width="2"/><rect x="42" y="274" width="36" height="70" rx="12" fill="#F2F8FA" stroke="#8FA9B3" stroke-width="3"/><rect x="46" y="318" width="28" height="22" rx="8" fill="#DCEEF8"/><circle cx="60" cy="300" r="5" fill="#9FD3EA"/>`;
+  return g + `</g>`;
+}
+function o2Mask(x, y, s = 1) {
+  // wall flowmeter (green) with clear tubing to a simple face mask
+  let g = `<g transform="translate(${x} ${y}) scale(${s})"><rect x="0" y="0" width="56" height="190" rx="12" fill="#2FA35B" stroke="#1E7A42" stroke-width="3"/><rect x="12" y="20" width="32" height="120" rx="14" fill="#EAF7EF" stroke="#1E7A42" stroke-width="2"/>`;
+  for (let i = 0; i < 6; i++) g += `<line x1="14" y1="${34 + i * 20}" x2="24" y2="${34 + i * 20}" stroke="#1E7A42" stroke-width="2"/>`;
+  g += `<circle cx="28" cy="96" r="9" fill="#3A3F44"/><circle cx="28" cy="164" r="14" fill="#1E7A42"/>${T(28, 228, "O₂", { size: 26, w: 800, anchor: "middle", fill: "#1E7A42" })}`;
+  g += `<path d="M 28 190 C 30 300, 160 330, 230 250" fill="none" stroke="#9FD0B4" stroke-width="10"/><path d="M 28 190 C 30 300, 160 330, 230 250" fill="none" stroke="#EAF7EF" stroke-width="5"/>`;
+  g += `<path d="M 230 120 C 300 110, 340 160, 330 230 C 320 290, 260 310, 230 300 C 200 270, 200 140, 230 120 Z" fill="#E6F4EC" fill-opacity=".8" stroke="#86B79A" stroke-width="4"/><circle cx="292" cy="220" r="8" fill="#B7D9C4"/><circle cx="292" cy="250" r="8" fill="#B7D9C4"/><path d="M 310 140 C 380 120, 400 180, 410 260" fill="none" stroke="#5C6E74" stroke-width="4"/>`;
+  return g + `</g>`;
+}
+function eqTile(i, lt, hd, sub, art) {
+  const x = 60 + (i % 2) * 510, y = 70 + Math.floor(i / 2) * 370, p = seg(lt, 0.3 + i * 0.6, 0.8 + i * 0.6), tk = seg(lt, 0.9 + i * 0.6, 1.2 + i * 0.6);
+  return `<g opacity="${p}" transform="translate(${x} ${y + (1 - p) * 30})"><rect width="490" height="340" rx="24" fill="${C.bg}"/>${art}${T(30, 286, hd, { size: 32, w: 800 })}${T(30, 322, sub, { size: 24, fill: C.muted })}${tick(440, 290, 0.5 + 0.5 * tk, tk)}</g>`;
+}
+
+// ---------- Seizure care scenes (Module 04, RMS.NCC.MW.F.008) ----------
+const SCENES = [];
+const add = (dur, o) => SCENES.push(Object.assign({ dur }, o));
+
+// simple person, lying, seen from above; jitter = seizure movement
+function personTop(x, y, s = 1, jit = 0) {
+  const j = (k) => (jit * Math.sin(k)).toFixed(1);
+  return `<g transform="translate(${x} ${y}) scale(${s})">
+    <rect x="-150" y="-${46}" width="300" height="92" rx="40" fill="#CFE3EA" stroke="#9DB9C3" stroke-width="3"/>
+    <rect x="-130" y="${-80 + +j(1)}" width="150" height="30" rx="15" fill="${C.skin}" stroke="${C.skinEdge}" stroke-width="3" transform="rotate(${-8 + +j(2)} -60 -65)"/>
+    <rect x="-130" y="${50 + +j(3)}" width="150" height="30" rx="15" fill="${C.skin}" stroke="${C.skinEdge}" stroke-width="3" transform="rotate(${8 + +j(4)} -60 65)"/>
+    <rect x="140" y="${-40 + +j(5)}" width="190" height="34" rx="17" fill="#8DA9B4"/><rect x="140" y="${6 + +j(6)}" width="190" height="34" rx="17" fill="#8DA9B4"/>
+    <circle cx="${-200 + +j(7)}" cy="0" r="56" fill="${C.skin}" stroke="${C.skinEdge}" stroke-width="3"/></g>`;
+}
+function stopwatch(x, y, sec, op = 1) {
+  const a = sec / 60 * 2 * Math.PI;
+  return `<g opacity="${op}" transform="translate(${x} ${y})"><rect x="-18" y="-128" width="36" height="24" rx="6" fill="${C.ink}"/><circle r="104" fill="#fff" stroke="${C.ink}" stroke-width="8"/><path d="M 0 0 L 0 -90 A 90 90 0 ${a > Math.PI ? 1 : 0} 1 ${90 * Math.sin(a)} ${-90 * Math.cos(a)} Z" fill="${C.tealSoft}"/><line x1="0" y1="0" x2="${86 * Math.sin(a)}" y2="${-86 * Math.cos(a)}" stroke="${C.red}" stroke-width="6" stroke-linecap="round"/><circle r="8" fill="${C.ink}"/>${T(0, 150, "0:" + String(Math.floor(sec)).padStart(2, "0"), { size: 40, w: 800, anchor: "middle" })}</g>`;
+}
+
+add(4.5, { kind: "title" });
+add(8, { step: 1, title: ["Know the", "seizure types"], bullets: ["Partial vs generalised", "Aura: a warning sign\nbefore a seizure", "Status epilepticus:\ncontinuous seizure,\nlife-threatening emergency"], draw: lt => checkCards([["Partial", "Starts in one area of the brain"], ["Generalised", "Involves both sides of the brain"], ["Aura", "A warning sensation before the seizure"], ["Status epilepticus", "Continuous seizure: emergency"]], lt) });
+add(7, { step: 2, title: ["Know the", "risk factors"], bullets: ["History of seizures", "Hypocalcaemia,\nhypoglycaemia", "Brain tumours, CNS\ninfection or trauma"], draw: lt => {
+  const items = [["History", "of seizures"], ["Low calcium", "Hypocalcaemia"], ["Low glucose", "Hypoglycaemia"], ["Brain", "Tumour, infection, trauma"]];
+  return items.map(([h, s], i) => { const x = 60 + (i % 2) * 510, y = 90 + Math.floor(i / 2) * 340, p = seg(lt, 0.3 + i * 0.5, 0.8 + i * 0.5);
+    return `<g opacity="${p}" transform="translate(${x} ${y + (1 - p) * 30})"><rect width="490" height="310" rx="24" fill="${C.tealSoft}"/><circle cx="245" cy="115" r="62" fill="${C.teal}"/>${T(245, 132, String(i + 1), { size: 52, w: 800, anchor: "middle", fill: "#fff" })}${T(245, 235, h, { size: 40, w: 800, anchor: "middle" })}${T(245, 278, s, { size: 28, anchor: "middle", fill: C.muted })}</g>`; }).join("");
+} });
+add(9, { step: 3, crit: true, title: ["Seizure", "precautions"], bullets: ["Explain the precautions\nto the patient", "Bed in the lowest position", "Side rails up and padded;\npad the headboard"], draw: lt => {
+  const low = seg(lt, 0.8, 2.4), rail = seg(lt, 2.6, 3.4), pad = seg(lt, 3.8, 4.8);
+  const by = lerp(300, 440, low);
+  let g = `<line x1="40" y1="760" x2="1080" y2="760" stroke="${C.ink}" stroke-width="5"/>`;
+  g += `<rect x="150" y="${by + 70}" width="22" height="${760 - by - 70}" fill="#9DB9C3"/><rect x="930" y="${by + 70}" width="22" height="${760 - by - 70}" fill="#9DB9C3"/>`;
+  g += [161, 941].map(wx => `<circle cx="${wx}" cy="736" r="22" fill="#3A3F44"/><circle cx="${wx}" cy="736" r="8" fill="#9AA5AD"/>`).join("");
+  g += `<rect x="120" y="${by + 40}" width="860" height="34" rx="8" fill="#9DB9C3"/><rect x="140" y="${by}" width="820" height="44" rx="14" fill="#E3EEF2" stroke="#8DA9B4" stroke-width="3"/>`;
+  g += `<rect x="96" y="${by - 120}" width="${30 + 14 * pad}" height="200" rx="10" fill="${pad ? "#7FB8E0" : "#9DB9C3"}" stroke="${pad ? "#3E7CC4" : "#7FA0AC"}" stroke-width="3"/>`; // headboard
+  g += `<g opacity="${rail}" transform="translate(0 ${(1 - rail) * 60})"><rect x="260" y="${by - 90}" width="560" height="${70 + 10 * pad}" rx="${14 + 10 * pad}" fill="${pad ? "#7FB8E0" : "none"}" stroke="${pad ? "#3E7CC4" : "#7FA0AC"}" stroke-width="6"/>${pad ? "" : [0, 1, 2, 3, 4].map(i => `<line x1="${300 + i * 120}" y1="${by - 90}" x2="${300 + i * 120}" y2="${by - 20}" stroke="#7FA0AC" stroke-width="5"/>`).join("")}</g>`;
+  g += `<g opacity="${low}">${arrow(1040, 290, 1040, 420, C.teal, 6)}</g>` + callout(820, 120, "Lowest position", seg(lt, 1.6, 2.0) * (1 - seg(lt, 3.6, 3.8)), C.teal);
+  g += callout(820, 120, "Rails up and padded", seg(lt, 4.0, 4.4), C.green);
+  return g;
+} });
+add(8, { step: 4, crit: true, title: ["Have the", "bedside ready"], bullets: ["Oral airway and suction\nequipment available", "Frequent seizures: IV access\nas ordered by the doctor", "Teach the patient to take\nmedicines as prescribed"], draw: lt => eqTile(0, lt, "Oral airway", "Guedel, right size, at the bedside", guedel(150, 70, 1)) + eqTile(1, lt, "Suction", "Checked and working", suctionUnit(40, 20, 0.85) + yankauer(250, 220, 0.75, -20)) + eqTile(2, lt, "IV access", "If frequent seizures, as ordered", cannula20(110, 120, 1)) + eqTile(3, lt, "Medicines", "Teach: take as prescribed", blister(130, 50, 1.0)) });
+add(8, { step: 5, title: ["Know the", "medicines"], bullets: ["Benzodiazepines: diazepam PR,\nlorazepam, clonazepam", "Anti-epileptics: carbamazepine,\nphenytoin, gabapentin,\nsodium valproate", "Give as ordered"], draw: lt => {
+  const col = (x, hd, items, t0, c) => `<g opacity="${seg(lt, t0, t0 + 0.5)}" transform="translate(${x} 80)"><rect width="460" height="680" rx="24" fill="${c}"/>${T(230, 70, hd, { size: 34, w: 800, anchor: "middle" })}${items.map((m, i) => `<g opacity="${seg(lt, t0 + 0.4 + i * 0.35, t0 + 0.8 + i * 0.35)}"><rect x="30" y="${120 + i * 130}" width="400" height="100" rx="18" fill="#fff"/>${T(230, 172 + i * 130, m, { size: 30, w: 700, anchor: "middle" })}</g>`).join("")}</g>`;
+  return col(70, "Benzodiazepines", ["Diazepam PR", "Lorazepam", "Clonazepam"], 0.3, C.tealSoft) + col(590, "Anti-epileptics", ["Carbamazepine", "Phenytoin", "Gabapentin", "Sodium valproate"], 1.6, "#E1F1F8");
+} });
+add(10, { step: 6, crit: true, title: ["During a seizure:", "keep them safe"], bullets: ["Goal: prevent injury,\naspiration, airway obstruction", "Stay with the patient;\ncall for help", "Protect the head", "Clear hard and sharp objects;\nprovide privacy"], draw: lt => {
+  let g = `<rect x="0" y="0" width="1120" height="840" fill="#EEF2F3"/>`;
+  const mv = seg(lt, 2.0, 3.2);
+  g += `<g transform="translate(${-mv * 260} ${-mv * 180})"><rect x="140" y="160" width="120" height="80" rx="10" fill="#B7C3C8"/><path d="M 220 300 l 50 -30 l 10 16 l -50 30 Z" fill="${C.steel}"/></g>`;
+  g += `<g transform="translate(${mv * 300} ${mv * 200})"><rect x="800" y="560" width="100" height="100" rx="12" fill="#B7C3C8"/></g>`;
+  const pil = seg(lt, 3.4, 4.2);
+  g += `<g opacity="${pil}"><ellipse cx="385" cy="420" rx="95" ry="80" fill="#F7E7C6" stroke="#D9C08F" stroke-width="3"/></g>`;
+  g += personTop(600, 420, 1, 6 * (1 - seg(lt, 8.0, 9.0)) * Math.sin(lt * 30) * (lt > 0.4 ? 1 : 0));
+  g += callout(560, 80, "Stay with the patient · call for help", seg(lt, 0.6, 1.2), C.red);
+  g += callout(380, 560, "Protect the head", seg(lt, 3.6, 4.0), C.teal) + callout(820, 760, "Clear the area", seg(lt, 2.4, 2.8), C.teal);
+  return g;
+} });
+add(9, { step: 7, crit: true, title: ["Observe", "and time it"], bullets: ["Earliest symptom", "Head or eye deviation", "How it progresses", "How long it lasts"], draw: lt => {
+  let g = stopwatch(300, 400, Math.min(59, lt * 7), 1);
+  g += checkCards([["First symptom", ""], ["Head / eye deviation", ""], ["Progression", ""], ["Duration", ""]], lt, 510, 560, 110, 140, 180);
+  return g + callout(300, 660, "Note the start time", seg(lt, 0.6, 1.0), C.teal);
+} });
+add(9, { step: 8, crit: true, title: ["Never put anything", "in the mouth"], bullets: ["Nothing in the mouth", "Do not restrain;\njust prevent injury", "Oral airway only if airway\nobstructs, or still unconscious\nafter the seizure"], draw: lt => checkCards([["Nothing in the mouth", "No fingers, spoons or tongue depressors"], ["Do not restrain", "Just keep the patient free from injury"]], lt, 80, 960, 150, 190, 90, C.red) + `<g opacity="${seg(lt, 2.4, 3.0)}">` + checkCards([["Oral airway: only if", "Airway obstructs, or unconscious after the seizure"]], 3, 80, 960, 150, 190, 520) + `</g>` });
+add(9, { step: 9, crit: true, title: ["Turn on", "the side"], bullets: ["If secretions: turn the\npatient on their side", "Secretions drain out", "The tongue falls forward"], draw: lt => {
+  const r = seg(lt, 0.6, 2.4);
+  let g = `<rect x="80" y="560" width="960" height="40" rx="12" fill="#E3EEF2" stroke="#8DA9B4" stroke-width="3"/>`;
+  // side-lying figure: torso, head, bent upper leg
+  g += `<g transform="translate(560 470)"><rect x="-180" y="-50" width="320" height="110" rx="50" fill="#CFE3EA" stroke="#9DB9C3" stroke-width="3"/><circle cx="-250" cy="-10" r="64" fill="${C.skin}" stroke="${C.skinEdge}" stroke-width="3"/>`;
+  g += `<g transform="rotate(${-40 * r} 140 10)"><rect x="130" y="-10" width="200" height="44" rx="22" fill="#8DA9B4"/></g><rect x="130" y="40" width="220" height="40" rx="20" fill="#7895A0"/>`;
+  g += `<rect x="-160" y="-${10 + 70 * r}" width="40" height="${80 + 0}" rx="20" fill="${C.skin}" stroke="${C.skinEdge}" stroke-width="3" transform="rotate(${-60 * r} -140 -10)"/></g>`;
+  const d = seg(lt, 2.8, 4.4);
+  g += `<g opacity="${d}"><circle cx="${300 - 10 * d}" cy="${500 + 40 * d}" r="10" fill="#9FD3EA"/><circle cx="${290 - 20 * d}" cy="${515 + 30 * d}" r="7" fill="#9FD3EA"/>${arrow(300, 470, 270, 540, "#3B8DB5", 5)}</g>`;
+  g += callout(560, 160, "Side-lying: secretions drain", seg(lt, 3.0, 3.4), C.teal) + callout(560, 260, "Tongue falls forward", seg(lt, 4.4, 4.8), C.teal);
+  return g;
+} });
+add(8, { step: 10, crit: true, title: ["IV and oxygen", "if ordered"], bullets: ["If ordered: IV line,\nnormal saline", "Prolonged seizure and\nhypoxaemia: oxygen as ordered"], draw: lt => {
+  const a = seg(lt, 0.4, 1.2), b = seg(lt, 1.6, 2.4);
+  let g = `<g opacity="${a}"><rect x="60" y="80" width="490" height="680" rx="24" fill="${C.bg}"/><line x1="440" y1="110" x2="440" y2="700" stroke="#9AA5AD" stroke-width="10"/><path d="M 440 120 L 290 120 L 290 135" fill="none" stroke="#9AA5AD" stroke-width="8" stroke-linecap="round"/><rect x="390" y="690" width="100" height="14" rx="7" fill="#9AA5AD"/>${nsBag(245, 150, 1, 0.85)}<path d="M 305 494 C 305 600, 200 620, 170 680" fill="none" stroke="#B8CBD2" stroke-width="8"/><rect x="276" y="566" width="30" height="40" rx="6" fill="#3E7CC4"/>${T(305, 735, "IV line: normal saline", { size: 30, w: 800, anchor: "middle" })}</g>`;
+  g += `<g opacity="${b}"><rect x="570" y="80" width="490" height="680" rx="24" fill="${C.bg}"/>${o2Mask(620, 180, 1)}${T(815, 735, "Oxygen as ordered", { size: 30, w: 800, anchor: "middle" })}</g>`;
+  return g + callout(560, 50, "If ordered by the doctor", seg(lt, 2.6, 3.0), C.teal);
+} });
+add(10, { step: 11, title: ["After the", "seizure"], bullets: ["Recovery position;\nsuction if needed", "Contact the doctor;\nreport the event", "Reassure the patient", "Vital signs and consciousness\nevery 15 min for 2 hours; GCS"], draw: lt => {
+  const x0 = 100, x1 = 1020, y = 470, p = seg(lt, 1.0, 6.0);
+  let g = T(560, 200, "Vital signs + consciousness", { size: 36, w: 800, anchor: "middle", fill: C.teal }) + T(560, 250, "every 15 minutes for 2 hours", { size: 30, anchor: "middle", fill: C.muted });
+  g += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="${C.line}" stroke-width="12" stroke-linecap="round"/><line x1="${x0}" y1="${y}" x2="${lerp(x0, x1, p)}" y2="${y}" stroke="${C.teal}" stroke-width="12" stroke-linecap="round"/>`;
+  for (let i = 0; i <= 8; i++) { const x = lerp(x0, x1, i / 8), on = p >= i / 8 - 0.001; g += `<circle cx="${x}" cy="${y}" r="${i % 4 ? 14 : 20}" fill="${on ? C.teal : "#C3D0D3"}"/>${i % 4 === 0 ? T(x, y + 60, (i * 15) + " min", { size: 24, anchor: "middle", fill: C.muted }) : ""}`; }
+  g += `<g opacity="${seg(lt, 6.2, 6.8)}"><rect x="360" y="600" width="400" height="110" rx="20" fill="${C.tealSoft}"/>${T(560, 650, "Glasgow Coma Scale", { size: 32, w: 800, anchor: "middle", fill: C.teal })}${T(560, 690, "as appropriate", { size: 26, anchor: "middle", fill: C.muted })}</g>`;
+  return g;
+} });
+add(9, { step: 12, warn: true, title: ["Status", "epilepticus"], bullets: ["Continuous seizure:\nlife-threatening emergency", "Prepare IV access, oxygen,\nairway management", "Give drugs as ordered;\ndescribe the event to\nthe physician"], draw: lt => {
+  const pulse = 0.5 + 0.5 * Math.sin(lt * 5);
+  let g = `<rect x="0" y="0" width="1120" height="840" fill="${C.redSoft}" opacity="${0.4 + 0.3 * pulse * seg(lt, 0, 1)}"/>`;
+  g += T(560, 150, "EMERGENCY", { size: 64, w: 800, anchor: "middle", fill: C.red, ls: 6 });
+  return g + checkCards([["IV access", ""], ["Oxygen", ""], ["Airway management", ""], ["Drugs as ordered", ""]], Math.max(0, lt - 0.8), 160, 800, 110, 140, 220, C.green);
+} });
+add(7, { step: 13, title: ["Care for the", "person"], bullets: ["Stay calm and attentive", "Support and educate patient\nand family", "Escalate deterioration\npromptly"], draw: lt => checkCards([["Calm and attentive", "Patient safety at all times"], ["Emotional support", "Patient and family: before, during, after"], ["Accountability", "Follow policy; escalate promptly"]], lt, 80, 960, 160, 220, 140) });
+add(9, { step: 14, title: ["Document", "the seizure"], bullets: ["Precautions taken", "Date, time, duration,\ntriggers", "Behaviour, body parts,\nincontinence, vomiting,\nsalivation"], draw: lt => {
+  const rows = [["Date / time", "30/10 · 14:05"], ["Duration", "2 min 10 s"], ["Precipitating factor", "Missed dose"], ["Behaviour", "Lip smacking, eye deviation L"], ["Body parts", "Right arm, then generalised"], ["Other", "Incontinence · salivation"], ["Precautions", "Rails padded, bed low"]];
+  let g = `<rect x="140" y="60" width="840" height="740" rx="24" fill="${C.bg}"/><rect x="390" y="30" width="340" height="60" rx="14" fill="${C.ink}"/>${T(560, 72, "Seizure record", { size: 28, w: 700, anchor: "middle", fill: "#fff" })}`;
+  rows.forEach(([h, v], i) => { const y = 140 + i * 92, p = seg(lt, 0.3 + i * 0.5, 0.7 + i * 0.5); g += `${T(190, y + 30, h, { size: 26, fill: C.muted })}<line x1="490" y1="${y + 42}" x2="940" y2="${y + 42}" stroke="${C.line}" stroke-width="3"/><g opacity="${p}">${T(490, y + 30, v, { size: 28, w: 700, fill: C.teal })}</g>`; });
+  return g;
+} });
+add(5, { kind: "end" });
+
+const DURS = [5.62, 15.71, 11.01, 12.04, 15.28, 16.33, 19.19, 11.97, 13.66, 9.95, 13.79, 19.76, 12.74, 9.56, 15.05, 5]; SCENES.forEach((s, i) => s.dur = DURS[i]);
+const TOTAL = SCENES.reduce((a, s) => a + s.dur, 0);
+const STEPS = SCENES.filter(s => s.step).length;
+
+function textPanel(s, lt) {
+  const p = seg(lt, 0, 0.5);
+  let g = `<g opacity="${p}" transform="translate(${(1 - p) * 40} 0)">`;
+  g += `<circle cx="1294" cy="200" r="46" fill="${s.warn ? C.red : C.teal}"/>${T(1294, 216, s.warn ? "!" : String(s.step), { size: 44, w: 800, anchor: "middle", fill: "#fff" })}`;
+  let y = 330;
+  s.title.forEach(l => { g += T(1248, y, l, { size: 62, w: 800 }); y += 72; });
+  y += 40;
+  if (s.crit) g += `<rect x="1362" y="174" width="300" height="52" rx="26" fill="${C.red}"/>${T(1512, 210, "CRITICAL POINT", { size: 26, w: 800, fill: "#fff", anchor: "middle", ls: 2 })}`;
+  g += `</g>`;
+  s.bullets.forEach((b, i) => {
+    const q = seg(lt, 0.6 + i * 0.5, 1.0 + i * 0.5);
+    g += `<g opacity="${q}"><rect x="1250" y="${y - 22}" width="14" height="14" rx="3" fill="${s.warn ? C.red : C.teal}"/>`;
+    b.split("\n").forEach(l => { g += T(1284, y, l, { size: 34, w: 500 }); y += 46; });
+    g += `</g>`; y += 22;
+  });
+  return g;
+}
+function chrome(s) {
+  let g = `${T(60, 72, "SEIZURE CARE", { size: 24, w: 800, fill: C.teal, ls: 3 })}${T(292, 72, "·  Ward Procedure Library", { size: 24, fill: C.muted })}`;
+  g += `<g><rect x="1640" y="40" width="220" height="44" rx="22" fill="#FFF1D1"/>${T(1750, 70, "Draft for review", { size: 22, w: 700, fill: "#8A5A00", anchor: "middle" })}</g>`;
+  const x0 = 80, x1 = 1840, y = 1030;
+  g += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="${C.line}" stroke-width="6" stroke-linecap="round"/>`;
+  const cur = s.step || 0;
+  const xc = x0 + (x1 - x0) * Math.max(0, cur - 1) / (STEPS - 1);
+  if (cur) g += `<line x1="${x0}" y1="${y}" x2="${xc}" y2="${y}" stroke="${C.teal}" stroke-width="6" stroke-linecap="round"/>`;
+  for (let i = 1; i <= STEPS; i++) { const x = x0 + (x1 - x0) * (i - 1) / (STEPS - 1); g += `<circle cx="${x}" cy="${y}" r="${i === cur ? 13 : 8}" fill="${i <= cur ? C.teal : "#C3D0D3"}" ${i === cur ? `stroke="#fff" stroke-width="4"` : ""}/>`; }
+  return g;
+}
+function titleScene(lt, end) {
+  const p = seg(lt, 0, 0.8), q = seg(lt, 0.6, 1.4), r = seg(lt, 1.2, 2.0);
+  let g = `<rect width="1920" height="1080" fill="${C.teal}"/><circle cx="1600" cy="540" r="${520 + 20 * Math.sin(lt)}" fill="#fff" opacity=".05"/>`;
+  if (!end) {
+    g += `<g opacity="${p}" transform="translate(0 ${(1 - p) * 30})">${T(140, 330, "WARD PROCEDURE LIBRARY", { size: 30, w: 700, fill: "#BFE6E6", ls: 6 })}${T(140, 460, "Seizure", { size: 120, w: 800, fill: "#fff" })}${T(140, 590, "care", { size: 120, w: 800, fill: "#fff" })}</g>`;
+    g += `<g opacity="${q}">${T(144, 680, "Precautions, response and recovery \u00b7 step by step", { size: 44, fill: "#E3F4F4" })}</g>`;
+    g += `<g opacity="${r}" transform="translate(${1350 + (1 - r) * 80} 540)"><circle r="190" fill="#fff" opacity=".12"/><path d="M -150 0 L -80 0 L -50 -90 L -10 110 L 30 -140 L 70 60 L 100 0 L 160 0" fill="none" stroke="#fff" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/></g>`;
+    g += `<g opacity="${r}">${T(144, 960, "Draft for review \u00b7 Module 04 \u00b7 RMS.NCC.MW.F.008 \u00b7 follow hospital policy", { size: 26, fill: "#BFE6E6" })}</g>`;
+  } else {
+    g += `<g opacity="${p}">${T(960, 380, "Watch  ·  Quiz  ·  Get signed off", { size: 84, w: 800, fill: "#fff", anchor: "middle" })}</g>`;
+    g += `<g opacity="${r}">${T(960, 640, "Practise on a manikin first, then under supervision.", { size: 36, fill: "#E3F4F4", anchor: "middle" })}${T(960, 700, "Always follow hospital policy and escalate promptly.", { size: 36, fill: "#E3F4F4", anchor: "middle" })}${T(960, 900, "Ward Procedure Library · Draft for review", { size: 26, fill: "#BFE6E6", anchor: "middle" })}</g>`;
+  }
+  return g;
+}
+
+window.TOTAL = TOTAL;
+window.drawFrame = (t) => {
+  let acc = 0, s = SCENES[SCENES.length - 1], lt = 0;
+  for (const sc of SCENES) { if (t < acc + sc.dur) { s = sc; lt = t - acc; break; } acc += sc.dur; }
+  if (t >= TOTAL) lt = s.dur;
+  let g = `<rect width="1920" height="1080" fill="${C.bg}"/>`;
+  if (s.kind === "title") g += titleScene(lt, false);
+  else if (s.kind === "end") g += titleScene(lt, true);
+  else {
+    g += chrome(s);
+    g += `<defs><clipPath id="card"><rect x="0" y="0" width="1120" height="840" rx="28"/></clipPath></defs>`;
+    g += `<g transform="translate(60 130)"><rect width="1120" height="840" rx="28" fill="#fff" stroke="${C.line}" stroke-width="2"/><g clip-path="url(#card)">${s.draw(lt)}</g></g>`;
+    g += textPanel(s, lt);
+  }
+  // fade from previous scene
+  const fin = clamp(lt / 0.35), fout = clamp((s.dur - lt) / 0.35);
+  const veil = 1 - Math.min(fin, fout);
+  if (veil > 0.001) g += `<rect width="1920" height="1080" fill="${C.bg}" opacity="${veil}"/>`;
+  document.getElementById("root").innerHTML = g;
+};
+window.drawFrame(0);
+</script>
+</body></html>
