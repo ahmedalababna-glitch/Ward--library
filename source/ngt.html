@@ -119,8 +119,41 @@ function patient(o = {}) {
   }
   return g;
 }
-function tubeAlong(p, col = "#F3E6B3") {
-  return `<path d="${TUBE_PATH}" fill="none" stroke="${col}" stroke-width="12" stroke-linecap="round" pathLength="1" stroke-dasharray="${p} 2"/><path d="${TUBE_PATH}" fill="none" stroke="#C9B36A" stroke-width="2" pathLength="1" stroke-dasharray="${p} 2" opacity=".7"/>`;
+// clear PVC tube: grey edge, clear body, blue radio-opaque line, black cm markings
+const TUBE_STYLE = d => `<path d="${d}" fill="none" stroke="#93A7AE" stroke-width="15" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#F2F8FA" stroke-width="10" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#2F6FD6" stroke-width="2.5"/><path d="${d}" fill="none" stroke="#2A2F33" stroke-width="10" stroke-dasharray="2.5 30"/>`;
+function tubeAlong(p) {
+  return `<defs><mask id="tmask" maskUnits="userSpaceOnUse" x="0" y="0" width="1120" height="840"><path d="${TUBE_PATH}" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round" pathLength="1" stroke-dasharray="${p} 2"/></mask></defs><g mask="url(#tmask)">${TUBE_STYLE(TUBE_PATH)}</g>`;
+}
+// purple enteral connector with tethered cap, pointing along +x after rotation
+function connector(x, y, ang) {
+  return `<g transform="translate(${x} ${y}) rotate(${ang})"><path d="M -4 -9 L 30 -13 L 64 -21 L 64 21 L 30 13 L -4 9 Z" fill="#C7A9E3" fill-opacity=".9" stroke="#7B4FA0" stroke-width="2.5"/><rect x="60" y="-24" width="14" height="48" rx="4" fill="#7B4FA0"/><path d="M 40 15 C 48 42, 80 46, 92 32" fill="none" stroke="#7B4FA0" stroke-width="5"/><rect x="84" y="20" width="24" height="20" rx="6" fill="#7B4FA0"/></g>`;
+}
+// external part of the tube from the nostril, ending in the connector
+function extTube(d, ex, ey, cx, cy, op = 1) {
+  const ang = Math.atan2(ey - cy, ex - cx) * 180 / Math.PI;
+  return `<g opacity="${op}">${TUBE_STYLE(d)}${connector(ex, ey, ang)}</g>`;
+}
+// beige fabric nasal fixation tape: pad on the nose, split tails wrapped around the tube
+function noseTape(op = 1) {
+  return `<g opacity="${op}"><path d="M 462 222 C 476 224, 498 236, 512 252 L 506 270 C 494 262, 476 254, 458 248 Z" fill="#EFDDBB" stroke="#C9AE7E" stroke-width="2.5"/>${[0, 1, 2].map(i => `<path d="M ${514 + i * 13} ${255 + i * 3} l 9 22" stroke="#EFDDBB" stroke-width="9" stroke-linecap="round"/><path d="M ${514 + i * 13} ${255 + i * 3} l 9 22" stroke="#C9AE7E" stroke-width="1.5" fill="none"/>`).join("")}</g>`;
+}
+// fabric tape on the cheek holding the tube
+function cheekTape(x, y, rot, op = 1) {
+  return `<g opacity="${op}" transform="translate(${x} ${y}) rotate(${rot})"><rect x="-38" y="-17" width="76" height="34" rx="9" fill="#EFDDBB" stroke="#C9AE7E" stroke-width="2.5"/>${[-24, -12, 0, 12, 24].map(dx => `<line x1="${dx}" y1="-12" x2="${dx}" y2="12" stroke="#DCC69C" stroke-width="2"/>`).join("")}</g>`;
+}
+// enteral syringe, tip on the left; fill = plunger travel (0..1)
+function syringe(x, y, fill) {
+  const sx = 70 + 300 * fill;
+  let g = `<g transform="translate(${x} ${y})">`;
+  g += `<path d="M 0 37 L 42 30 L 42 60 L 0 53 Z" fill="#E9DDF5" stroke="#7B4FA0" stroke-width="3"/>`;
+  g += `<rect x="40" y="0" width="360" height="90" rx="10" fill="#F4F9FB" stroke="#8FA3AA" stroke-width="3"/>`;
+  if (fill > 0) g += `<rect x="44" y="6" width="${sx - 44}" height="78" fill="#D9C66A" opacity=".85"/>`;
+  for (let i = 0; i <= 10; i++) g += `<line x1="${70 + i * 30}" y1="2" x2="${70 + i * 30}" y2="${i % 5 ? 16 : 28}" stroke="#4A5A60" stroke-width="2"/>`;
+  [0, 5, 10].forEach(v => g += T(70 + v * 30, -8, String(v), { size: 16, w: 700, anchor: "middle", fill: "#4A5A60" }));
+  g += `<rect x="${sx}" y="4" width="22" height="82" rx="6" fill="#3A3F44"/>`;
+  g += `<rect x="${sx + 22}" y="37" width="380" height="16" fill="#C7A9E3" stroke="#7B4FA0" stroke-width="2"/><rect x="${sx + 398}" y="4" width="16" height="82" rx="5" fill="#C7A9E3" stroke="#7B4FA0" stroke-width="2"/>`;
+  g += `<rect x="394" y="-24" width="16" height="138" rx="6" fill="#C7A9E3" stroke="#7B4FA0" stroke-width="2"/>`;
+  return g + `</g>`;
 }
 function checkCards(rows, lt, x = 80, w = 960, h = 140, gap = 170, top = 110, col = C.green) {
   return rows.map(([hd, sub], i) => {
@@ -130,12 +163,18 @@ function checkCards(rows, lt, x = 80, w = 960, h = 140, gap = 170, top = 110, co
 }
 function phStrip(x, y, val, p) {
   const cols = ["#C62828", "#E64A19", "#F57C00", "#FBC02D", "#C0CA33", "#7CB342", "#2E7D32", "#00838F", "#1565C0"];
-  let g = `<g transform="translate(${x} ${y})">`;
+  let g = `<g transform="translate(${x} ${y})"><rect x="-24" y="-70" width="678" height="290" rx="16" fill="#fff" stroke="#C9D3D6" stroke-width="3"/>${T(0, -36, "pH reference chart", { size: 22, w: 700, fill: C.muted })}`;
   cols.forEach((c, i) => { g += `<rect x="${i * 70}" y="0" width="66" height="60" rx="6" fill="${c}"/>${T(i * 70 + 33, 95, String(i + 1), { size: 24, w: 700, anchor: "middle" })}`; });
-  g += `<rect x="-6" y="-12" width="${5 * 70 + 6}" height="84" rx="10" fill="none" stroke="${C.green}" stroke-width="6"/>${T(170, -26, "Safe: pH 0.5 – 5.0", { size: 26, w: 800, anchor: "middle", fill: C.green })}`;
+  g += `<rect x="-6" y="-12" width="${5 * 70 + 6}" height="84" rx="10" fill="none" stroke="${C.green}" stroke-width="6"/>${T(450, -36, "Safe: pH 0.5 – 5.0", { size: 26, w: 800, anchor: "middle", fill: C.green })}`;
   const mx = (val - 1) * 70 + 33;
   g += `<g opacity="${p}"><path d="M ${mx} 120 l -16 26 h 32 z" fill="${C.ink}"/>${T(mx, 180, "pH " + val, { size: 30, w: 800, anchor: "middle" })}</g>`;
   return g + `</g>`;
+}
+// pH indicator test strip: white plastic strip, test pad changes colour when wet
+function testStrip(x, y, wet, val) {
+  const cols = ["#C62828", "#E64A19", "#F57C00", "#FBC02D", "#C0CA33", "#7CB342", "#2E7D32", "#00838F", "#1565C0"];
+  const pad = wet > 0 ? cols[val - 1] : "#F3EBC8";
+  return `<g transform="translate(${x} ${y})"><rect x="0" y="0" width="300" height="34" rx="6" fill="#fff" stroke="#9AA9AE" stroke-width="2.5"/><rect x="10" y="5" width="44" height="24" rx="4" fill="#F3EBC8"/><rect x="10" y="5" width="44" height="24" rx="4" fill="${pad}" opacity="${wet}"/>${T(170, 24, "pH test strip", { size: 18, w: 700, anchor: "middle", fill: C.muted })}</g>`;
 }
 
 add(4.5, { kind: "title" });
@@ -153,7 +192,7 @@ add(8, { step: 3, title: ["Measure and", "mark the tube"], ar: "قياس الأ�
   if (b > 0) g += `<line x1="${EAR.x}" y1="${EAR.y + 20}" x2="${p2.x}" y2="${p2.y}" stroke="${C.teal}" stroke-width="6" stroke-dasharray="14 10"/>`;
   [[NOSE, "N", 0.3], [{ x: EAR.x, y: EAR.y + 20 }, "E", 1.7], [XIPH, "X", 3.3]].forEach(([pt, l, t0]) => { const q = seg(lt, t0, t0 + 0.4); g += `<g opacity="${q}"><circle cx="${pt.x}" cy="${pt.y}" r="22" fill="${C.teal}"/>${T(pt.x, pt.y + 9, l, { size: 26, w: 800, anchor: "middle", fill: "#fff" })}</g>`; });
   const m = seg(lt, 4.0, 5.0);
-  g += `<g opacity="${m}" transform="translate(640 200)"><rect x="0" y="0" width="420" height="22" rx="11" fill="#F3E6B3" stroke="#C9B36A" stroke-width="2"/>${[...Array(9)].map((_, i) => `<line x1="${40 + i * 40}" y1="0" x2="${40 + i * 40}" y2="10" stroke="#8a7a3a" stroke-width="2"/>`).join("")}<rect x="270" y="-14" width="12" height="50" rx="3" fill="${C.red}"/>${T(276, 80, "Mark here", { size: 28, w: 800, anchor: "middle", fill: C.red })}${T(210, -34, "Measured length = NEX", { size: 26, w: 700, anchor: "middle", fill: C.teal })}</g>`;
+  g += `<g opacity="${m}" transform="translate(590 210)"><path d="M 0 11 L 400 11" fill="none" stroke="#93A7AE" stroke-width="24" stroke-linecap="round"/><path d="M 0 11 L 400 11" fill="none" stroke="#F2F8FA" stroke-width="18" stroke-linecap="round"/><path d="M 0 11 L 400 11" stroke="#2F6FD6" stroke-width="3"/><ellipse cx="14" cy="11" rx="5" ry="3" fill="#7D9097"/><ellipse cx="36" cy="11" rx="5" ry="3" fill="#7D9097"/>${[...Array(8)].map((_, i) => `<line x1="${80 + i * 40}" y1="1" x2="${80 + i * 40}" y2="${i % 2 ? 12 : 21}" stroke="#2A2F33" stroke-width="3"/>${i % 2 ? "" : T(80 + i * 40, 48, String(40 + i * 5), { size: 18, w: 700, anchor: "middle", fill: "#4A5A60" })}`).join("")}${connector(400, 11, 0)}<rect x="194" y="-16" width="12" height="54" rx="3" fill="${C.red}"/>${T(200, 92, "Mark here: 55 cm", { size: 28, w: 800, anchor: "middle", fill: C.red })}${T(200, -36, "Measured length = NEX", { size: 26, w: 700, anchor: "middle", fill: C.teal })}</g>`;
   return g;
 } });
 add(8, { step: 4, title: ["Insert and", "secure temporarily"], ar: "إدخال الأنبوب وتثبيته مؤقتاً", bullets: ["Lubricate the tip", "Advance gently;\nask the patient to swallow", "Stop if distress, coughing\nor cyanosis", "Tape temporarily"], draw: lt => {
@@ -162,34 +201,34 @@ add(8, { step: 4, title: ["Insert and", "secure temporarily"], ar: "إدخال �
   g += tubeAlong(p);
   g += callout(640, 330, "Swallow…", seg(lt, 2.2, 2.6) * (1 - seg(lt, 4.0, 4.4)), C.teal);
   const tp = seg(lt, 5.6, 6.4);
-  g += `<g opacity="${tp}"><rect x="488" y="248" width="60" height="26" rx="5" fill="#fff" stroke="#B8C4C9" stroke-width="2" transform="rotate(-20 518 261)"/></g>` + callout(700, 230, "Temporary tape", tp);
-  g += `<path d="M 498 262 C 560 270, 600 300, 640 360" fill="none" stroke="#F3E6B3" stroke-width="12" stroke-linecap="round" opacity="${seg(lt, 0.8, 1.2)}"/>`;
+  g += extTube("M 498 262 C 560 270, 600 300, 640 360", 640, 360, 600, 300, seg(lt, 0.8, 1.2));
+  g += cheekTape(522, 268, -20, tp) + callout(700, 230, "Temporary tape", tp);
   return g;
 } });
 add(9, { step: 5, crit: true, title: ["Confirm", "placement: pH"], ar: "التأكد من مكان الأنبوب: فحص الحموضة", bullets: ["Aspirate 0.5–1 ml", "Test on pH indicator strip", "Safe range: pH 0.5 – 5.0", "Not in range: do not use;\nfollow procedural manual"], draw: lt => {
-  let g = `<g transform="translate(110 120)"><rect x="0" y="0" width="420" height="90" rx="12" fill="#fff" stroke="${C.ink}" stroke-width="4"/><rect x="${6 + 380 * (1 - seg(lt, 0.6, 2.2) * 0.25)}" y="6" width="${8}" height="78" fill="${C.ink}"/><rect x="420" y="30" width="100" height="30" fill="${C.ink}"/><line x1="-80" y1="45" x2="0" y2="45" stroke="#F3E6B3" stroke-width="14"/>`;
-  g += `<rect x="${380 * (1 - seg(lt, 0.6, 2.2) * 0.25) - 50}" y="10" width="${50 * seg(lt, 0.6, 2.2)}" height="70" fill="#D9C66A" opacity=".8"/>${T(210, -24, "Aspirate 0.5 – 1 ml", { size: 30, w: 800, anchor: "middle", fill: C.teal })}</g>`;
+  let g = `<g transform="translate(0 0)">${TUBE_STYLE("M -20 165 L 120 165")}${connector(120, 165, 0)}</g>` + syringe(186, 120, seg(lt, 0.6, 2.2) * 0.1) + T(500, 66, "Aspirate 0.5 – 1 ml", { size: 30, w: 800, anchor: "middle", fill: C.teal });
   const d = seg(lt, 2.6, 3.4);
-  g += `<circle cx="${lerp(300, 330, d)}" cy="${lerp(230, 430, d)}" r="${14 * (1 - d * 0.3)}" fill="#D9C66A" opacity="${(d > 0 && d < 1) ? 1 : 0}"/>`;
-  g += phStrip(170, 470, 4, seg(lt, 3.6, 4.4));
-  g += `<g opacity="${seg(lt, 4.8, 5.4)}">${tick(380, 760, 1)}${T(420, 772, "pH 4: in range. Proceed as ordered.", { size: 32, w: 800, fill: C.green })}</g>`;
+  g += `<circle cx="${lerp(192, 262, d)}" cy="${lerp(175, 385, d)}" r="${12 * (1 - d * 0.3)}" fill="#D9C66A" opacity="${(d > 0 && d < 1) ? 1 : 0}"/>`;
+  g += testStrip(230, 380, seg(lt, 3.3, 3.8), 4);
+  g += phStrip(170, 530, 4, seg(lt, 3.6, 4.4));
+  g += `<g opacity="${seg(lt, 4.8, 5.4)}">${tick(380, 790, 1)}${T(420, 802, "pH 4: in range. Proceed as ordered.", { size: 32, w: 800, fill: C.green })}</g>`;
   return g;
 } });
 add(8, { step: 6, crit: true, title: ["Never use these", "to check placement"], ar: "طرق غير مقبولة للتأكد من المكان", bullets: ["No 'whoosh' test", "No litmus paper", "They can't tell stomach\nfrom lung"], draw: lt => checkCards([["'Whoosh' test", "Listening for air: NOT reliable"], ["Litmus paper", "Not accurate enough: NOT reliable"], ["Watching for bubbles", "NOT reliable"]], lt, 80, 960, 160, 220, 140, C.red) + callout(560, 800, "Use pH aspirate, and X-ray when required", seg(lt, 3.0, 3.6), C.teal) });
 add(8, { step: 7, crit: true, title: ["Mark and record", "the exit site"], ar: "تعليم وتوثيق مكان خروج الأنبوب", bullets: ["Straight after X-ray\nconfirms position", "Mark the tube at\nthe nostril", "Record the cm marking"], draw: lt => {
   let g = patient({ anatomy: 0.35 }) + tubeAlong(1);
-  g += `<path d="M 498 262 C 560 270, 600 300, 640 380" fill="none" stroke="#F3E6B3" stroke-width="12" stroke-linecap="round"/>`;
+  g += extTube("M 498 262 C 560 270, 600 300, 640 380", 640, 380, 600, 300);
   const xr = seg(lt, 0.4, 1.4);
   g += `<g opacity="${xr}" transform="translate(720 90)"><rect width="330" height="250" rx="16" fill="#1F2A30"/><path d="M 120 30 C 110 100, 120 140, 165 165 C 205 185, 245 165, 235 140" fill="none" stroke="#E8EEF0" stroke-width="6" opacity=".9"/><ellipse cx="195" cy="160" rx="70" ry="36" fill="none" stroke="#7d8a90" stroke-width="3"/>${T(165, 236, "X-ray confirmed", { size: 24, w: 700, anchor: "middle", fill: "#9fe3c0" })}</g>`;
   const mk = seg(lt, 2.0, 2.8);
-  g += `<g opacity="${mk}"><rect x="532" y="262" width="10" height="30" rx="3" fill="${C.red}" transform="rotate(30 537 277)"/></g>` + callout(640, 470, "Exit site: 55 cm at left nostril", seg(lt, 3.0, 3.6), C.red);
+  g += `<g opacity="${mk}"><rect x="532" y="262" width="10" height="30" rx="3" fill="${C.red}" transform="rotate(30 537 277)"/></g>` + callout(660, 600, "Exit site: 55 cm at left nostril", seg(lt, 3.0, 3.6), C.red);
   g += `<g opacity="${seg(lt, 4.2, 4.8)}" transform="translate(720 560)"><rect width="330" height="150" rx="16" fill="${C.bg}"/>${T(24, 50, "Record", { size: 26, w: 800, fill: C.teal })}${T(24, 92, "Marking: 55 cm", { size: 28, w: 700 })}${T(24, 130, "Nostril: left", { size: 28, w: 700 })}</g>`;
   return g;
 } });
 add(6, { step: 8, title: ["Secure the", "tube"], ar: "تثبيت الأنبوب", bullets: ["Secure as per the\nprocedural manual", "No pressure on the nostril", "Check the mark stays\nat the nostril"], draw: lt => {
-  let g = patient({ anatomy: 0.2 }) + tubeAlong(1) + `<path d="M 498 262 C 560 270, 600 300, 640 380" fill="none" stroke="#F3E6B3" stroke-width="12" stroke-linecap="round"/>`;
+  let g = patient({ anatomy: 0.2 }) + tubeAlong(1) + extTube("M 498 262 C 560 270, 600 300, 640 380", 640, 380, 600, 300);
   const p = seg(lt, 0.6, 1.6);
-  g += `<g opacity="${p}"><path d="M 470 236 L 512 252 L 500 280 L 462 262 Z" fill="#fff" stroke="#B8C4C9" stroke-width="3"/><rect x="560" y="262" width="60" height="28" rx="6" fill="#fff" stroke="#B8C4C9" stroke-width="3" transform="rotate(30 590 276)"/></g>`;
+  g += noseTape(p) + cheekTape(592, 300, 45, p);
   g += callout(700, 200, "Nose tape, no pressure on the nostril", seg(lt, 1.8, 2.4), C.teal);
   return g;
 } });
@@ -207,7 +246,8 @@ add(7, { step: 11, title: ["Remove the", "tube safely"], ar: "إزالة الأ�
   let g = patient({ anatomy: seg(lt, 0, 0.6) * 0.8 });
   const p = 1 - seg(lt, 1.6, 4.6);
   g += tubeAlong(p);
-  g += `<path d="M 498 262 C ${560 + (1 - p) * 120} ${270 - (1 - p) * 20}, ${600 + (1 - p) * 160} ${300 - (1 - p) * 40}, ${640 + (1 - p) * 220} ${380 - (1 - p) * 100}" fill="none" stroke="#F3E6B3" stroke-width="12" stroke-linecap="round"/>`;
+  const q = 1 - p, ex = 640 + q * 220, ey = 380 - q * 100, cx = 600 + q * 160, cy = 300 - q * 40;
+  g += extTube(`M 498 262 C ${560 + q * 120} ${270 - q * 20}, ${cx} ${cy}, ${ex} ${ey}`, ex, ey, cx, cy);
   g += callout(760, 180, "Explain first", seg(lt, 0.4, 0.9) * (1 - seg(lt, 1.6, 2.0)), C.teal) + callout(760, 180, "Smooth, steady pull", seg(lt, 2.0, 2.4), C.teal);
   return g;
 } });
