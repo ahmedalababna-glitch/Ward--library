@@ -100,7 +100,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
 const f1 = v => v == null ? "–" : v.toFixed(1);
 const pct = v => v == null ? "–" : Math.round(v) + "%";
-let ROWS = [], DEMO = false, TESTN = 0;
+let ROWS = [], DEMO = false, TESTN = 0, STEP = "v6";
 const HAS_SERVER = typeof RESULTS_URL !== "undefined" && !!RESULTS_URL;
 
 function demoRows() {
@@ -199,14 +199,15 @@ function jsonp(url) {
 async function fetchRows(pin) {
   const url = RESULTS_URL + "?pin=" + encodeURIComponent(pin) + "&t=" + Date.now();
   let j;
-  try { const r = await fetch(url); j = await r.json(); }
-  catch (e) { j = await jsonp(url); }   // fallback for browsers that block the cross-site request
+  try { STEP = "fetch"; const r = await fetch(url); j = await r.json(); }
+  catch (e) { STEP = "jsonp after " + e.name; j = await jsonp(url); }
+  STEP = "render";   // fallback for browsers that block the cross-site request
   if (!j.ok) throw new Error(j.error || "error"); return j.rows;
 }
 async function open(pin) {
   $("lmsg").textContent = "Loading…";
   try { const all = await fetchRows(pin); ROWS = all.filter(r => String(r[1]).trim().toLowerCase() !== "test"); TESTN = all.length - ROWS.length; DEMO = false; try { sessionStorage.setItem("wpl-pin", pin); } catch (e) {} show(); }
-  catch (e) { $("lmsg").innerHTML = `<span class="err">${e.message === "pin" ? "Wrong PIN." : "Could not load results. Check the connection and try again."}</span>`; }
+  catch (e) { $("lmsg").innerHTML = `<span class="err">${e.message === "pin" ? "Wrong PIN." : "Could not load results. Check the connection and try again."}</span><div class="sub" style="font-size:12px;margin-top:6px">Details: ${esc(STEP + " · " + (e && (e.name + ": " + e.message)))}</div>`; }
 }
 function show() { $("login").hidden = true; $("dash").hidden = false; $("demonote").hidden = !DEMO; render(); }
 
