@@ -63,7 +63,7 @@ input, select { border: 1px solid var(--line); background: var(--card); border-r
   <div id="dash" hidden>
     <div class="demo" id="demonote" hidden>Example data only, so you can see how the page works. Real results will appear here once the results store is connected.</div>
     <div class="row" style="margin-top:16px;justify-content:space-between">
-      <p class="sub" id="updated"></p>
+      <p class="sub"><span id="updated"></span> · Results under the name "TEST" are hidden.</p>
       <div class="row"><button class="btn" id="refresh">Refresh</button><button class="btn" id="csv">Download CSV</button><button class="btn" id="logout">Lock</button></div>
     </div>
     <div class="kpis" id="kpis"></div>
@@ -192,7 +192,7 @@ async function fetchRows(pin) {
 }
 async function open(pin) {
   $("lmsg").textContent = "Loading…";
-  try { ROWS = await fetchRows(pin); DEMO = false; try { sessionStorage.setItem("wpl-pin", pin); } catch (e) {} show(); }
+  try { ROWS = (await fetchRows(pin)).filter(r => String(r[1]).trim().toLowerCase() !== "test"); DEMO = false; try { sessionStorage.setItem("wpl-pin", pin); } catch (e) {} show(); }
   catch (e) { $("lmsg").innerHTML = `<span class="err">${e.message === "pin" ? "Wrong PIN." : "Could not load results. Check the connection and try again."}</span>`; }
 }
 function show() { $("login").hidden = true; $("dash").hidden = false; $("demonote").hidden = !DEMO; render(); }
