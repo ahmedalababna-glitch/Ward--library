@@ -1,12 +1,25 @@
 // Ward Procedure Library – results store (Google Apps Script, runs in YOUR Google account)
+// Paste into a new project at script.google.com (or into a Sheet via Extensions > Apps Script).
 // Only one thing to change: the ADMIN_PIN below (the PIN you will type on the Admin page).
 const ADMIN_PIN = "1234";
 
 const HEAD = ["Time", "Name / staff no.", "Procedure", "Stage", "Attempt", "Score /5", "Confidence 1-5", "Q1", "Q2", "Q3", "Q4", "Q5"];
 const PROCS = ["ngt", "cath", "peg", "seiz", "cvc", "lp", "trach", "cdi", "cdr", "tpn"];
 
+function book_() {
+  // works pasted into a Sheet (Extensions > Apps Script) or as a new project at script.google.com
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active;
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty("SHEET_ID");
+  if (id) return SpreadsheetApp.openById(id);
+  const ss = SpreadsheetApp.create("Ward Library results");
+  props.setProperty("SHEET_ID", ss.getId());
+  return ss;
+}
+
 function sheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = book_();
   let sh = ss.getSheetByName("Results");
   if (!sh) { sh = ss.insertSheet("Results"); sh.appendRow(HEAD); sh.setFrozenRows(1); }
   return sh;

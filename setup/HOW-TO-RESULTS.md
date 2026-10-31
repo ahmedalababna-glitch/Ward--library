@@ -4,8 +4,8 @@ The site saves every pre-test and post-test to a Google Sheet in **your** Google
 You never need to open the Sheet: the Admin page on the site shows the results and the analysis.
 A computer is easiest for these steps.
 
-1. Open https://sheets.new (signed in to your Google account). Name it `Ward Library results`.
-2. Menu **Extensions → Apps Script**.
+1. Open https://script.google.com and click **New project** (on a phone: Safari, then **aA → Request Desktop Website**).
+2. (The script makes its own Sheet called `Ward Library results` in your Google Drive the first time a result arrives.)
 3. Delete what is in the editor, then paste all of `setup/results-script.gs` from this repository.
 4. On the line `const ADMIN_PIN = "1234";` change `1234` to your own PIN. Click **Save** (disk icon).
 5. Click **Deploy → New deployment**. Click the gear next to "Select type" and choose **Web app**.
