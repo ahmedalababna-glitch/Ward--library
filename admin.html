@@ -187,9 +187,21 @@ function csv() {
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], { type: "text/csv" })); a.download = "ward-library-results.csv"; a.click();
 }
 
+function jsonp(url) {
+  return new Promise((res, rej) => {
+    const cb = "wplcb" + Date.now(), s = document.createElement("script"), done = () => { delete window[cb]; s.remove(); };
+    const timer = setTimeout(() => { done(); rej(new Error("net")); }, 20000);
+    window[cb] = (j) => { clearTimeout(timer); done(); res(j); };
+    s.onerror = () => { clearTimeout(timer); done(); rej(new Error("net")); };
+    s.src = url + "&callback=" + cb; document.head.appendChild(s);
+  });
+}
 async function fetchRows(pin) {
-  const r = await fetch(RESULTS_URL + "?pin=" + encodeURIComponent(pin) + "&t=" + Date.now());
-  const j = await r.json(); if (!j.ok) throw new Error(j.error || "error"); return j.rows;
+  const url = RESULTS_URL + "?pin=" + encodeURIComponent(pin) + "&t=" + Date.now();
+  let j;
+  try { const r = await fetch(url); j = await r.json(); }
+  catch (e) { j = await jsonp(url); }   // fallback for browsers that block the cross-site request
+  if (!j.ok) throw new Error(j.error || "error"); return j.rows;
 }
 async function open(pin) {
   $("lmsg").textContent = "Loading…";

@@ -39,7 +39,9 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  if (!e.parameter || e.parameter.pin !== ADMIN_PIN) return out_({ ok: false, error: "pin" });
+  const p = e.parameter || {}, cb = /^[A-Za-z_$][\w$]{0,40}$/.test(p.callback || "") ? p.callback : "";
+  const send = (o) => cb ? ContentService.createTextOutput(cb + "(" + JSON.stringify(o) + ")").setMimeType(ContentService.MimeType.JAVASCRIPT) : out_(o);
+  if (p.pin !== ADMIN_PIN) return send({ ok: false, error: "pin" });
   const v = sheet_().getDataRange().getValues().slice(1);
-  return out_({ ok: true, rows: v.map(r => [new Date(r[0]).toISOString(), r[1], r[2], r[3], r[4], r[5], r[6], r.slice(7, 12)]) });
+  return send({ ok: true, rows: v.map(r => [new Date(r[0]).toISOString(), r[1], r[2], r[3], r[4], r[5], r[6], r.slice(7, 12)]) });
 }
