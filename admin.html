@@ -207,7 +207,7 @@ async function fetchRows(pin) {
 async function open(pin) {
   $("lmsg").textContent = "Loading…";
   try { const all = await fetchRows(pin); ROWS = all.filter(r => String(r[1]).trim().toLowerCase() !== "test"); TESTN = all.length - ROWS.length; DEMO = false; try { sessionStorage.setItem("wpl-pin", pin); } catch (e) {} show(); }
-  catch (e) { $("lmsg").innerHTML = `<span class="err">${e.message === "pin" ? "Wrong PIN." : "Could not load results. Check the connection and try again."}</span><div class="sub" style="font-size:12px;margin-top:6px">Details: ${esc(STEP + " · " + (e && (e.name + ": " + e.message)))}</div>`; }
+  catch (e) { $("lmsg").innerHTML = `<span class="err">${e.message === "pin" ? "Wrong PIN." : "Could not load results here. Open them through Google instead:"}</span>${e.message === "pin" ? "" : `<div class=\"row\" style=\"margin-top:8px\"><a class=\"btn primary\" style=\"text-decoration:none\" href=\"${GOOGLE_ADMIN}\" target=\"_top\">Open results via Google</a></div>`}<div class="sub" style="font-size:12px;margin-top:6px">Details: ${esc(STEP + " · " + (e && (e.name + ": " + e.message)))}</div>`; }
 }
 function show() { $("login").hidden = true; $("dash").hidden = false; $("demonote").hidden = !DEMO; render(); }
 
@@ -222,7 +222,12 @@ $("pin").onkeydown = e => { if (e.key === "Enter") $("go").click(); };
 $("refresh").onclick = () => { if (DEMO) return render(); let p = ""; try { p = sessionStorage.getItem("wpl-pin") || ""; } catch (e) {} if (p) open(p); };
 $("logout").onclick = () => { try { sessionStorage.removeItem("wpl-pin"); } catch (e) {} ROWS = []; $("dash").hidden = true; $("login").hidden = false; $("pin").value = ""; $("lmsg").textContent = ""; };
 try { const p = sessionStorage.getItem("wpl-pin"); if (p && HAS_SERVER) open(p); } catch (e) {}
-if (!HAS_SERVER) $("lmsg").textContent = "The results store is not connected yet. You can preview the page with example data.";
+const GOOGLE_ADMIN = (typeof ADMIN_URL !== "undefined" ? ADMIN_URL : (HAS_SERVER ? RESULTS_URL : "")) + "?view=admin";
+if (typeof PRELOAD !== "undefined") {
+  // page served from Google with the results already inside
+  ROWS = PRELOAD.filter(r => String(r[1]).trim().toLowerCase() !== "test"); TESTN = PRELOAD.length - ROWS.length; DEMO = false; show();
+  $("refresh").onclick = $("logout").onclick = () => { window.top.location.href = GOOGLE_ADMIN; };
+} else if (!HAS_SERVER) $("lmsg").textContent = "The results store is not connected yet. You can preview the page with example data.";
 </script>
 </body>
 </html>
