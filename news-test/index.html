@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NEWS Knowledge Check</title>
+<style>
+/* Layout: one narrow working column; a 4-step track at the top; one task per screen */
+:root{
+  --bg:#f3f7f8; --surface:#ffffff; --ink:#17324d; --muted:#5b6d7c; --line:#d3e0e5;
+  --accent:#087e8b; --accent-soft:#e1f1f3; --good:#2b8a57; --good-soft:#e2f4ea; --bad:#c23b3b; --bad-soft:#fbe5e5; --amber:#b86e00;
+  --f-display:"Space Grotesk","Inter","Segoe UI",system-ui,sans-serif;
+  --f-body:"Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1b24; --surface:#16252f; --ink:#e3edf2; --muted:#9db0bd; --line:#2a3d4a;
+  --accent:#3fb5c1; --accent-soft:#173842; --good:#5cc68a; --good-soft:#173528; --bad:#ef7b7b; --bad-soft:#3b1f22; --amber:#f0b44c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1b24; --surface:#16252f; --ink:#e3edf2; --muted:#9db0bd; --line:#2a3d4a;
+  --accent:#3fb5c1; --accent-soft:#173842; --good:#5cc68a; --good-soft:#173528; --bad:#ef7b7b; --bad-soft:#3b1f22; --amber:#f0b44c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;margin:0}
+.wrap{max-width:720px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-direction:column;gap:4px;margin-bottom:18px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{font-family:var(--f-display);font-size:28px;line-height:1.15;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-size:22px;line-height:1.2;margin:0;text-wrap:balance}
+.muted{color:var(--muted)}
+.track{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:14px 0 22px}
+.track div{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--muted);font-weight:600}
+.track div::before{content:"";height:6px;border-radius:3px;background:var(--line)}
+.track div.done::before{background:var(--accent)}
+.track div.now{color:var(--ink)}
+.track div.now::before{background:linear-gradient(90deg,var(--accent) 50%,var(--line) 50%)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px}
+label{font-weight:600;font-size:14px;display:flex;flex-direction:column;gap:6px}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:480px){.row{grid-template-columns:1fr}}
+button{font:inherit;cursor:pointer;border-radius:10px;padding:13px 18px;font-weight:700;border:1px solid transparent}
+.primary{background:var(--accent);color:var(--surface)}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible,.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.actions{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.qbar{height:4px;background:var(--line);border-radius:2px;overflow:hidden}.qbar i{display:block;height:100%;background:var(--accent)}
+.qtext{font-size:19px;font-weight:600;line-height:1.4}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;background:var(--bg);border:1.5px solid var(--line);color:var(--ink);font-weight:500;padding:13px 14px}
+.opt b{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);font-size:14px}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.opt[aria-pressed="true"] b{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+video{width:100%;max-width:100%;border-radius:10px;background:#000;aspect-ratio:16/9}
+.note{background:var(--accent-soft);border-radius:10px;padding:12px 14px;font-size:14px}
+.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.score{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:2px}
+.score span{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.score strong{font-family:var(--f-display);font-size:34px;line-height:1.1;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:4px 10px;border-radius:20px;font-size:13px;font-weight:700}
+.pass{background:var(--good-soft);color:var(--good)}.fail{background:var(--bad-soft);color:var(--bad)}
+.review{display:flex;flex-direction:column;gap:10px}
+.rv{border:1px solid var(--line);border-left:5px solid var(--good);border-radius:10px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:4px}
+.rv.wrong{border-left-color:var(--bad)}
+.rv .ok{color:var(--good);font-weight:600}.rv .no{color:var(--bad);font-weight:600}
+.code{font-family:ui-monospace,Consolas,monospace;font-size:13.5px;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:12px;user-select:all;overflow-wrap:anywhere}
+.test .qtext,.test .opt{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.listen{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px;border:1.5px dashed var(--line);border-radius:12px}.play{font-size:17px}
+.timer{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent)}.timer.low{color:var(--bad)}
+.err{color:var(--bad);font-size:14px;font-weight:600}
+@media (prefers-reduced-motion:no-preference){.panel{animation:in .25s ease-out}@keyframes in{from{transform:translateY(6px)}to{transform:none}}}
+</style>
+</head><body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">EWS project · Staff education</div>
+    <h1>NEWS Knowledge Check</h1>
+    <div class="muted">Pre-test, training video (Patient cases A–G), then the same test again. About 15 minutes.</div>
+  </header>
+  <div class="track" id="track"><div>1 · Pre-test</div><div>2 · Video</div><div>3 · Post-test</div><div>4 · Result</div></div>
+  <main id="app"></main>
+</div>
+
+<script>
+const Q = [
+ {
+  "q": "A patient is admitted to your ward. When must the first NEWS be completed?",
+  "o": [
+   "Within 1 hour of admission",
+   "Within 4 hours of admission",
+   "Within 12 hours of admission",
+   "At the next morning round"
+  ],
+  "a": 1,
+  "r": "Patient A; policy 4.2"
+ },
+ {
+  "q": "A patient's NEWS is 0. What is the minimum frequency of NEWS?",
+  "o": [
+   "Once every 12 hours",
+   "Once per shift",
+   "At least every 4 hours",
+   "Once a day"
+  ],
+  "a": 2,
+  "r": "Patient A"
+ },
+ {
+  "q": "A post-operative patient has a total NEWS of 3, and no single parameter scores 3. What should happen?",
+  "o": [
+   "The registered nurse assesses the patient and decides on monitoring or escalation",
+   "No action until the next routine check",
+   "Call the Rapid Response Team immediately",
+   "Call Code Blue"
+  ],
+  "a": 0,
+  "r": "Patient B"
+ },
+ {
+  "q": "A 78-year-old patient is newly confused (C on ACVPU). All other observations are normal. What is the NEWS?",
+  "o": [
+   "0",
+   "1",
+   "3, a red score in a single parameter",
+   "5"
+  ],
+  "a": 2,
+  "r": "Patient C"
+ },
+ {
+  "q": "A patient has a score of 3 in one parameter, but the total is only 3. What is the correct action?",
+  "o": [
+   "Recheck at the next 4-hourly round",
+   "Wait until the total reaches 5",
+   "Document only",
+   "Inform the medical team; the doctor assesses within 30 minutes; repeat observations every 30 minutes"
+  ],
+  "a": 3,
+  "r": "Patient C"
+ },
+ {
+  "q": "A patient with a chest infection has a NEWS of 6. What is the correct response?",
+  "o": [
+   "The registered nurse monitors and rechecks in 4 hours",
+   "Inform the team leader and call the doctor at once using SBAR; bedside review within 10 minutes; think sepsis",
+   "Wait for the next ward round",
+   "Give paracetamol and recheck tomorrow"
+  ],
+  "a": 1,
+  "r": "Patient D"
+ },
+ {
+  "q": "A patient's NEWS is 7 or more. Which response is correct?",
+  "o": [
+   "Emergency response: medical team immediately, continuous monitoring, critical care team assessment",
+   "Urgent ward-based review within 1 hour",
+   "Increase observations to every 4 hours",
+   "Inform the night supervisor in the morning"
+  ],
+  "a": 0,
+  "r": "Patient E"
+ },
+ {
+  "q": "A patient's NEWS is 1, but her son says she looks much worse, and you are worried. What should you do?",
+  "o": [
+   "Nothing; the score is low",
+   "Wait for the score to rise",
+   "Document the family's comment only",
+   "Escalate to the medical team; clinical and family concern can override the score"
+  ],
+  "a": 3,
+  "r": "Patient F"
+ },
+ {
+  "q": "A patient is receiving supplemental oxygen (2 L/min nasal cannula). How many points does oxygen add to the NEWS?",
+  "o": [
+   "0",
+   "1",
+   "2",
+   "3"
+  ],
+  "a": 2,
+  "r": "Patient G"
+ },
+ {
+  "q": "When should SpO2 Scale 2 be used?",
+  "o": [
+   "For every patient on oxygen",
+   "For every patient with COPD",
+   "Only for a hypercapnic patient with a physician's order and a target of 88\u201392%",
+   "Whenever the SpO2 is below 92%"
+  ],
+  "a": 2,
+  "r": "Patient G"
+ }
+];
+const QA = ["audio/q0.mp3", "audio/q1.mp3", "audio/q2.mp3", "audio/q3.mp3", "audio/q4.mp3", "audio/q5.mp3", "audio/q6.mp3", "audio/q7.mp3", "audio/q8.mp3", "audio/q9.mp3"];
+const VIDEO = "video.mp4";
+const VTT = "data:text/vtt;base64,V0VCVlRUCgoxCjAwOjAwOjAwLjgwMCAtLT4gMDA6MDA6MDUuMzk5ClBhdGllbnQgQS4gQSBmaWZ0eS1mb3VyIHllYXIgb2xkIG1hbiwgYWRtaXR0ZWQgdG8gdGhlIHdhcmQgdHdvIGhvdXJzIGFnby4KCjIKMDA6MDA6MDcuMDk5IC0tPiAwMDowMDoxMC4yNzgKSGlzIGZpcnN0IE5FV1MgbXVzdCBiZSBkb25lIHdpdGhpbiBmb3VyIGhvdXJzIG9mIGFkbWlzc2lvbi4KCjMKMDA6MDA6MTAuNDc4IC0tPiAwMDowMDoxNS4zMjUKVGhlIG51cnNlIG1lYXN1cmVzIGFsbCBzaXggdml0YWwgc2lnbnMsIGFuZCByZWNvcmRzIHRoZW0gaW4gdGhlIEVNUiBzdHJhaWdodCBhd2F5LgoKNAowMDowMDoxNy40MjUgLS0+IDAwOjAwOjIwLjkwOQpFdmVyeSBwYXJhbWV0ZXIgaXMgaW4gdGhlIG5vcm1hbCByYW5nZS4gVGhlIE5FV1MgaXMgemVyby4KCjUKMDA6MDA6MjIuOTA5IC0tPiAwMDowMDoyNC45MDEKQSBzY29yZSBvZiB6ZXJvIG1lYW5zIHJvdXRpbmUgY2FyZS4KCjYKMDA6MDA6MjUuMTAxIC0tPiAwMDowMDoyOS40MTgKQ29udGludWUgTkVXUyB3aXRoIGV2ZXJ5IHNldCBvZiBvYnNlcnZhdGlvbnMsIGF0IGxlYXN0IGV2ZXJ5IGZvdXIgaG91cnMuCgo3CjAwOjAwOjI5LjYxOCAtLT4gMDA6MDA6MzEuNzk0CklmIGhpcyBjb25kaXRpb24gY2hhbmdlcywgY2hlY2sgc29vbmVyLgoKOAowMDowMDozNC4wOTQgLS0+IDAwOjAwOjQwLjk3MQpLZXkgcG9pbnQ6IGV2ZW4gYSB6ZXJvIG5lZWRzIGEgZmlyc3QgTkVXUyB3aXRoaW4gZm91ciBob3VycyBvZiBhZG1pc3Npb24sIGFuZCB0aGVuIGF0IGxlYXN0IGV2ZXJ5IGZvdXIgaG91cnMuCgo5CjAwOjAwOjQ0LjIwMCAtLT4gMDA6MDA6NDguNTExClBhdGllbnQgQi4gQSBzaXh0eS10d28geWVhciBvbGQgd29tYW4sIG9uIGRheSB0d28gYWZ0ZXIgc3VyZ2VyeS4KCjEwCjAwOjAwOjUwLjIxMSAtLT4gMDA6MDA6NTQuMzYzCkF0IHRoZSByb3V0aW5lIGNoZWNrLCB0aGUgcGF0aWVudCBjYXJlIGFzc2lzdGFudCBtZWFzdXJlcyBoZXIgdml0YWwgc2lnbnMuCgoxMQowMDowMDo1NC41NjMgLS0+IDAwOjAxOjAwLjUwNwpIZXIgdGVtcGVyYXR1cmUgaXMgdGhpcnR5LWVpZ2h0IHBvaW50IHRocmVlLCBhbmQgaGVyIHB1bHNlIGlzIG5pbmV0eS1zaXguIFNoZSB0ZWxscyB0aGUgbnVyc2Ugc3RyYWlnaHQgYXdheS4KCjEyCjAwOjAxOjAyLjYwNyAtLT4gMDA6MDE6MTEuMjgyClRoZSBFTVIgc2NvcmVzIG9uZSBlYWNoIGZvciBveHlnZW4gc2F0dXJhdGlvbiwgcHVsc2UsIGFuZCB0ZW1wZXJhdHVyZS4gVGhlIHRvdGFsIGlzIHRocmVlLCBhbmQgbm8gc2luZ2xlIHBhcmFtZXRlciBzY29yZXMgdGhyZWUuCgoxMwowMDowMToxMy4yODIgLS0+IDAwOjAxOjE4LjA0NQpBIHNjb3JlIG9mIG9uZSB0byBmb3VyIG1lYW5zIHRoZSByZWdpc3RlcmVkIG51cnNlIGF0dGVuZHMsIGFuZCBhc3Nlc3NlcyB0aGUgcGF0aWVudC4KCjE0CjAwOjAxOjE4LjI0NSAtLT4gMDA6MDE6MjEuODM1ClRoZSBudXJzZSBkZWNpZGVzIHdoZXRoZXIgdG8gbW9uaXRvciBtb3JlIG9mdGVuLCBvciB0byBlc2NhbGF0ZS4KCjE1CjAwOjAxOjIyLjAzNSAtLT4gMDA6MDE6MjYuNTkwCklmIHNoZSBpcyBjb25jZXJuZWQsIG9yIHRoZSBzY29yZSBpcyByaXNpbmcgZmFzdCwgc2hlIHRlbGxzIHRoZSB0ZWFtIGxlYWRlci4KCjE2CjAwOjAxOjI4Ljg5MCAtLT4gMDA6MDE6MzUuNDAwCktleSBwb2ludDogYSBsb3cgc2NvcmUgc3RpbGwgbmVlZHMgYSByZWdpc3RlcmVkIG51cnNlIHRvIGFzc2VzcyB0aGUgcGF0aWVudCwgYW5kIGRlY2lkZSB3aGF0IGhhcHBlbnMgbmV4dC4KCjE3CjAwOjAxOjM4LjYwMCAtLT4gMDA6MDE6NDMuMzg2ClBhdGllbnQgQy4gQSBzZXZlbnR5LWVpZ2h0IHllYXIgb2xkIG1hbiwgYWRtaXR0ZWQgd2l0aCBhIHVyaW5lIGluZmVjdGlvbi4KCjE4CjAwOjAxOjQ1LjA4NiAtLT4gMDA6MDE6NDcuMTgwCkhpcyBvYnNlcnZhdGlvbnMgbG9vayBhbG1vc3Qgbm9ybWFsLgoKMTkKMDA6MDE6NDcuMzgwIC0tPiAwMDowMTo1MS4xMzQKQnV0IHRvZGF5LCBoZSBkb2Vzbid0IGtub3cgd2hlcmUgaGUgaXMuIEhpcyBmYW1pbHkgc2F5IHRoaXMgaXMgbmV3LgoKMjAKMDA6MDE6NTEuMzM0IC0tPiAwMDowMTo1NS4zNDIKTmV3IGNvbmZ1c2lvbiBpcyByZWNvcmRlZCBhcyBDLCBvbiB0aGUgQUNWUFUgc2NhbGUuCgoyMQowMDowMTo1Ny40NDIgLS0+IDAwOjAyOjA0LjQ3OQpOZXcgY29uZnVzaW9uIHNjb3JlcyB0aHJlZSBvbiBpdHMgb3duLiBUaGUgdG90YWwgaXMgb25seSB0aHJlZSwgYnV0IHRoaXMgaXMgYSByZWQgc2NvcmUgaW4gYSBzaW5nbGUgcGFyYW1ldGVyLgoKMjIKMDA6MDI6MDYuNDc5IC0tPiAwMDowMjowOS42MTIKQSByZWQgc2NvcmUgbWVhbnMgdGhlIG51cnNlIGluZm9ybXMgdGhlIG1lZGljYWwgdGVhbS4KCjIzCjAwOjAyOjA5LjgxMiAtLT4gMDA6MDI6MTIuODA1ClRoZSBkb2N0b3IgbXVzdCBhc3Nlc3MgdGhlIHBhdGllbnQgd2l0aGluIHRoaXJ0eSBtaW51dGVzLgoKMjQKMDA6MDI6MTMuMDA1IC0tPiAwMDowMjoxNi40NzYKVW50aWwgdGhlbiwgcmVwZWF0IHRoZSBvYnNlcnZhdGlvbnMgZXZlcnkgdGhpcnR5IG1pbnV0ZXMuCgoyNQowMDowMjoxOC43NzYgLS0+IDAwOjAyOjI2Ljc4MwpLZXkgcG9pbnQ6IG5ldmVyIHdhaXQgZm9yIHRoZSB0b3RhbC4gQSBzaW5nbGUgdGhyZWUgbWVhbnMgY2FsbCB0aGUgZG9jdG9yLiBBbmQgdHJlYXQgY29uZnVzaW9uIGFzIG5ldywgdW50aWwgcHJvdmVuIG90aGVyd2lzZS4KCjI2CjAwOjAyOjMwLjAwMCAtLT4gMDA6MDI6MzQuNjE3ClBhdGllbnQgRC4gQSBzaXh0eS1maXZlIHllYXIgb2xkIHdvbWFuLCBhZG1pdHRlZCB3aXRoIGEgY2hlc3QgaW5mZWN0aW9uLgoKMjcKMDA6MDI6MzYuMzE3IC0tPiAwMDowMjozOS4xNTUKQXQgdGVuIG8nY2xvY2ssIHRoZSBudXJzZSBtZWFzdXJlcyBoZXIgdml0YWwgc2lnbnMuCgoyOAowMDowMjozOS4zNTUgLS0+IDAwOjAyOjQ0LjUxNApIZXIgYnJlYXRoaW5nIGlzIGZhc3RlciwgaGVyIHRlbXBlcmF0dXJlIGlzIHVwLCBhbmQgaGVyIGJsb29kIHByZXNzdXJlIGlzIGxvd2VyIHRoYW4geWVzdGVyZGF5LgoKMjkKMDA6MDI6NDYuNjE0IC0tPiAwMDowMjo0OC44ODUKVGhlIEVNUiBjYWxjdWxhdGVzIGEgTkVXUyBvZiBzaXguCgozMAowMDowMjo0OS4wODUgLS0+IDAwOjAyOjUzLjg2OQpGaXZlIG9yIG1vcmUgaXMgdGhlIHVyZ2VudCByZXNwb25zZSB0aHJlc2hvbGQuIFdpdGggYW4gaW5mZWN0aW9uLCB0aGluayBzZXBzaXMuCgozMQowMDowMjo1NS44NjkgLS0+IDAwOjAzOjAxLjQ5MgpUaGUgbnVyc2UgaW5mb3JtcyB0aGUgdGVhbSBsZWFkZXIsIGFuZCBjYWxscyB0aGUgb24tY2FsbCBkb2N0b3IgYXQgb25jZSwgdXNpbmcgU0JBUi4KCjMyCjAwOjAzOjAxLjY5MiAtLT4gMDA6MDM6MDUuMDg2ClRoZSBkb2N0b3IgbXVzdCByZXZpZXcgaGVyIGF0IHRoZSBiZWRzaWRlIHdpdGhpbiB0ZW4gbWludXRlcy4KCjMzCjAwOjAzOjA1LjI4NiAtLT4gMDA6MDM6MDkuOTYxCk9ic2VydmF0aW9ucyBhcmUgcmVwZWF0ZWQgZXZlcnkgZmlmdGVlbiB0byB0aGlydHkgbWludXRlcywgaW4gYSBtb25pdG9yZWQgYXJlYS4KCjM0CjAwOjAzOjEyLjI2MSAtLT4gMDA6MDM6MTkuMjg5CktleSBwb2ludDogZml2ZSBvciBtb3JlIGlzIHVyZ2VudC4gQ2FsbCB1c2luZyBTQkFSLCBhbmQgZG9jdW1lbnQgdGhlIHRpbWUgb2YgdGhlIGNhbGwgYW5kIHRoZSByZXNwb25zZS4KCjM1CjAwOjAzOjIyLjUyMCAtLT4gMDA6MDM6MjcuMjE5ClBhdGllbnQgRS4gQSBzZXZlbnR5IHllYXIgb2xkIG1hbiwgdHdvIGRheXMgYWZ0ZXIgYWJkb21pbmFsIHN1cmdlcnkuCgozNgowMDowMzoyOC45MTkgLS0+IDAwOjAzOjMxLjQxNApIZSBpcyBicmVhdGhpbmcgZmFzdCwgYXQgdHdlbnR5LWZpdmUgYSBtaW51dGUuCgozNwowMDowMzozMS42MTQgLS0+IDAwOjAzOjM5LjIyNQpIaXMgb3h5Z2VuIHNhdHVyYXRpb24gaXMgbmluZXR5LXR3bywgaGlzIHB1bHNlIGlzIG9uZSBodW5kcmVkIGFuZCBlaWdodGVlbiwgYW5kIGhpcyBibG9vZCBwcmVzc3VyZSBoYXMgZHJvcHBlZCB0byBuaW5ldHktZWlnaHQuCgozOAowMDowMzo0MS4zMjUgLS0+IDAwOjAzOjQyLjM4NApUaGUgTkVXUyBpcyBuaW5lLgoKMzkKMDA6MDM6NDIuNTg0IC0tPiAwMDowMzo0NS43MzEKU2V2ZW4gb3IgbW9yZSBpcyB0aGUgZW1lcmdlbmN5IHJlc3BvbnNlIHRocmVzaG9sZC4KCjQwCjAwOjAzOjQ3LjczMSAtLT4gMDA6MDM6NTQuMzA3ClRoZSBudXJzZSBpbmZvcm1zIHRoZSBtZWRpY2FsIHRlYW0gaW1tZWRpYXRlbHkuIEhlIG1vdmVzIHRvIGEgbW9uaXRvcmVkIGJlZCwgd2l0aCBjb250aW51b3VzIG1vbml0b3JpbmcuCgo0MQowMDowMzo1NC41MDcgLS0+IDAwOjAzOjU5LjM5MwpUaGUgZG9jdG9yIHJldmlld3MgaGltIGF0IHRoZSBiZWRzaWRlIHdpdGhpbiB0ZW4gbWludXRlcywgYW5kIGVzY2FsYXRlcyB0byB0aGUgY29uc3VsdGFudC4KCjQyCjAwOjAzOjU5LjU5MyAtLT4gMDA6MDQ6MDUuOTI2CkEgdGVhbSB3aXRoIGNyaXRpY2FsIGNhcmUgc2tpbGxzIGFzc2Vzc2VzIGhpbSwgYW5kIHRyYW5zZmVyIHRvIEhEVSBvciBJQ1UgaXMgY29uc2lkZXJlZC4KCjQzCjAwOjA0OjA2LjEyNiAtLT4gMDA6MDQ6MDcuOTg0CklmIGhlIGFycmVzdHMsIGNhbGwgQ29kZSBCbHVlLgoKNDQKMDA6MDQ6MTAuMjg0IC0tPiAwMDowNDoxNC43MTUKS2V5IHBvaW50OiBzZXZlbiBvciBtb3JlIGlzIGFuIGVtZXJnZW5jeS4gR2V0IGNyaXRpY2FsIGNhcmUgaGVscCwgbm93LgoKNDUKMDA6MDQ6MTcuOTIwIC0tPiAwMDowNDoyMi40NjAKUGF0aWVudCBGLiBBIGZpZnR5LWVpZ2h0IHllYXIgb2xkIHdvbWFuLCBhZG1pdHRlZCB3aXRoIGFiZG9taW5hbCBwYWluLgoKNDYKMDA6MDQ6MjQuMTYwIC0tPiAwMDowNDoyNS44NjQKVGhlIG51cnNlIGNoZWNrcyBoZXIgdml0YWwgc2lnbnMuCgo0NwowMDowNDoyNi4wNjQgLS0+IDAwOjA0OjMxLjk4OApIZXIgc29uIHNheXMgc2hlIGxvb2tzIG11Y2ggd29yc2UgdGhhbiB0aGlzIG1vcm5pbmcuIFNoZSBpcyBwYWxlLCBzd2VhdHksIGFuZCBoZXIgcGFpbiBpcyBnZXR0aW5nIHdvcnNlLgoKNDgKMDA6MDQ6MzQuMDg4IC0tPiAwMDowNDozNy4wMDkKSGVyIE5FV1MgaXMgb25seSBvbmUsIGJ1dCB0aGUgbnVyc2UgaXMgd29ycmllZCB0b28uCgo0OQowMDowNDozNy4yMDkgLS0+IDAwOjA0OjQxLjAzNQpDbGluaWNhbCBjb25jZXJuLCBhbmQgdGhlIGZhbWlseSdzIGNvbmNlcm4sIGNhbiBvdmVycmlkZSB0aGUgc2NvcmUuCgo1MAowMDowNDo0My4wMzUgLS0+IDAwOjA0OjQ2LjQ3NgpUaGUgbnVyc2UgZXNjYWxhdGVzIHRvIHRoZSBtZWRpY2FsIHRlYW0sIGFuZCBhc2tzIGZvciBhIHJldmlldy4KCjUxCjAwOjA0OjQ2LjY3NiAtLT4gMDA6MDQ6NTMuNDkxCklmIHRoZSBkb2N0b3IgZG9lcyBub3QgcmVzcG9uZCwgc2hlIGNhbGxzIHRoZSBzZW5pb3IgcmVzaWRlbnQgb3IgY29uc3VsdGFudCwgYW5kIGluZm9ybXMgdGhlIG51cnNpbmcgc3VwZXJ2aXNvci4KCjUyCjAwOjA0OjUzLjY5MSAtLT4gMDA6MDQ6NTcuMjEwCklmIGVzY2FsYXRpb24gc3RpbGwgZmFpbHMsIHNoZSBjb21wbGV0ZXMgYW4gaW5jaWRlbnQgcmVwb3J0LgoKNTMKMDA6MDQ6NTkuNTExIC0tPiAwMDowNTowNC44NjAKS2V5IHBvaW50OiBpZiB5b3UgYXJlIHdvcnJpZWQsIGVzY2FsYXRlLCB3aGF0ZXZlciB0aGUgc2NvcmUuIExpc3RlbiB0byBwYXRpZW50cyBhbmQgZmFtaWxpZXMuCgo1NAowMDowNTowOC4wODAgLS0+IDAwOjA1OjE2Ljk2NQpQYXRpZW50IEcuIEEgc2l4dHktZWlnaHQgeWVhciBvbGQgbWFuIHdpdGggQ09QRCwgYWRtaXR0ZWQgd2l0aCBhIGNoZXN0IGluZmVjdGlvbi4gSGUgaXMgb24gdHdvIGxpdHJlcyBvZiBveHlnZW4sIGJ5IG5hc2FsIGNhbm51bGEuCgo1NQowMDowNToxOC42NjUgLS0+IDAwOjA1OjI4LjU1NQpIaXMgZG9jdG9yIGhhcyBkb2N1bWVudGVkIHR5cGUgdHdvIHJlc3BpcmF0b3J5IGZhaWx1cmUsIHdpdGggYSB0YXJnZXQgc2F0dXJhdGlvbiBvZiBlaWdodHktZWlnaHQgdG8gbmluZXR5LXR3byBwZXJjZW50LCBhbmQgaGFzIG9yZGVyZWQgU3BP4oKCIFNjYWxlIDIuCgo1NgowMDowNToyOC43NTUgLS0+IDAwOjA1OjM0LjIxNwpUaGUgbnVyc2UgbWVhc3VyZXMgaGlzIHZpdGFsIHNpZ25zLiBIaXMgc2F0dXJhdGlvbiBpcyBlaWdodHktbmluZSBwZXJjZW50LCBvbiBveHlnZW4uCgo1NwowMDowNTozNC40MTcgLS0+IDAwOjA1OjQwLjc0MApTaGUgcmVjb3JkcyB0aGUgb3h5Z2VuIGZsb3cgcmF0ZSwgdHdvIGxpdHJlcyBhIG1pbnV0ZSwgYW5kIHRoZSBkZXZpY2UsIG5hc2FsIGNhbm51bGEsIG9uIHRoZSBORVdTIGNoYXJ0LgoKNTgKMDA6MDU6NDIuODQwIC0tPiAwMDowNTo0OC4xNjMKT24gU2NhbGUgMiwgYSBzYXR1cmF0aW9uIG9mIGVpZ2h0eS1uaW5lIGlzIGluc2lkZSBoaXMgdGFyZ2V0LCBzbyBpdCBzY29yZXMgemVyby4KCjU5CjAwOjA1OjQ4LjM2MyAtLT4gMDA6MDU6NTMuMjQ2CkJlY2F1c2UgaGUgaXMgb24gc3VwcGxlbWVudGFsIG94eWdlbiwgdHdvIHBvaW50cyBhcmUgYWRkZWQuIFRoZSBORVdTIGlzIHRocmVlLgoKNjAKMDA6MDU6NTMuNDQ2IC0tPiAwMDowNTo1OS4zMzkKSWYgU2NhbGUgMSB3ZXJlIHVzZWQgYnkgbWlzdGFrZSwgdGhlIHNhbWUgc2F0dXJhdGlvbiB3b3VsZCBzY29yZSB0aHJlZSwgYW5kIHRoZSB0b3RhbCB3b3VsZCBiZSBzaXguCgo2MQowMDowNjowMS4zMzkgLS0+IDAwOjA2OjA2Ljc0MgpBIHNjb3JlIG9mIHRocmVlIG1lYW5zIHRoZSByZWdpc3RlcmVkIG51cnNlIGFzc2Vzc2VzIGhpbSwgYW5kIGRlY2lkZXMgaG93IG9mdGVuIHRvIG1vbml0b3IuCgo2MgowMDowNjowNi45NDIgLS0+IDAwOjA2OjE2LjA4OApLZWVwIGhpcyBzYXR1cmF0aW9uIGluIHRoZSB0YXJnZXQgcmFuZ2UsIGVpZ2h0eS1laWdodCB0byBuaW5ldHktdHdvIHBlcmNlbnQuIFRvbyBtdWNoIG94eWdlbiBjYW4gY2F1c2UgZGFuZ2Vyb3VzIGNhcmJvbiBkaW94aWRlIHJldGVudGlvbi4KCjYzCjAwOjA2OjE2LjI4OCAtLT4gMDA6MDY6MjEuOTE5CklmIHRoZXJlIGlzIG5vIHBoeXNpY2lhbidzIG9yZGVyIGZvciBTY2FsZSAyLCB1c2UgU2NhbGUgMSwgYW5kIGNyb3NzIG91dCB0aGUgc2NhbGUgbm90IGluIHVzZS4KCjY0CjAwOjA2OjI0LjIxOSAtLT4gMDA6MDY6MzQuMTQxCktleSBwb2ludDogb3h5Z2VuIGFkZHMgdHdvIHBvaW50cyB0byB0aGUgTkVXUy4gVXNlIFNjYWxlIDIgb25seSBmb3IgaHlwZXJjYXBuaWMgcGF0aWVudHMsIHN1Y2ggYXMgQ09QRCwgd2l0aCBhIHBoeXNpY2lhbidzIG9yZGVyIGFuZCBhIHNldCB0YXJnZXQuCg==";
+const L = "ABCD";
+const S = { step:"start", id:"", ward:"", role:"", phase:"pre", i:0, pre:Array(Q.length).fill(null), post:Array(Q.length).fill(null), videoDone:false, start:null };
+const app = document.getElementById("app");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const score = arr => arr.reduce((n,a,i)=>n+(a===Q[i].a?1:0),0);
+
+function setTrack(){
+  const m={start:["","","",""],between:["done","now","",""],video:["done","now","",""],result:["done","done","done","done"]};
+  const st=S.step==="test"?(S.phase==="pre"?["now","","",""]:["done","done","now",""]):m[S.step];
+  document.querySelectorAll("#track div").forEach((d,i)=>d.className=st[i]);
+}
+
+function render(){
+  setTrack();
+  if(S.step==="start") return renderStart();
+  if(S.step==="test") return renderQ();
+  if(S.step==="between") return renderBetween();
+  if(S.step==="video") return renderVideo();
+  if(S.step==="result") return renderResult();
+}
+
+function renderStart(){
+  app.innerHTML = `<form class="panel" id="f">
+    <h2>Before you start</h2>
+    <div class="muted">Turn on the sound or use headphones: each question is spoken, not shown, and you can replay it twice. Answer on your own, without looking anything up. You have 45 seconds after each question, and the order is different for every person. Then watch the video and answer the same questions again.</div>
+    <label for="sid">Staff ID<input id="sid" required autocomplete="off" value="${esc(S.id)}" placeholder="e.g. 102345"></label>
+    <div class="row">
+      <label for="ward">Ward<select id="ward" required>
+        <option value="">Choose…</option>${["3A","3C","3D","4A","4B","4C","4D","Other"].map(w=>`<option ${S.ward===w?"selected":""}>${w}</option>`).join("")}
+      </select></label>
+      <label for="role">Role<select id="role" required>
+        <option value="">Choose…</option>${["RN","PCA","Other"].map(w=>`<option ${S.role===w?"selected":""}>${w}</option>`).join("")}
+      </select></label>
+    </div>
+    <div id="msg" class="err" hidden></div>
+    <div class="actions"><span></span><button class="primary" type="submit">Start pre-test</button></div>
+  </form>`;
+  document.getElementById("f").addEventListener("submit", e=>{
+    e.preventDefault();
+    S.id=document.getElementById("sid").value.trim(); S.ward=document.getElementById("ward").value; S.role=document.getElementById("role").value;
+    if(!S.id||!S.ward||!S.role){const m=document.getElementById("msg");m.textContent="Enter your staff ID, ward and role to start.";m.hidden=false;return}
+    S.start=new Date(); startPhase("pre");
+  });
+}
+
+const SECS = 45;
+let timer = null;
+function shuffle(n){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function startPhase(ph){S.phase=ph;S.i=0;S.order=shuffle(Q.length).map(qi=>({qi,perm:shuffle(Q[qi].o.length)}));S.step="test";render();window.scrollTo(0,0)}
+function advance(){
+  clearInterval(timer); if(curAudio){curAudio.pause();curAudio=null}
+  if(S.i<Q.length-1){S.i++;renderQ();return}
+  S.step = S.phase==="pre" ? "between" : "result"; render(); window.scrollTo(0,0);
+}
+function renderQ(){
+  clearInterval(timer);
+  const arr = S[S.phase], {qi,perm} = S.order[S.i], q = Q[qi];
+  app.innerHTML = `<section class="panel test" data-qi="${qi}">
+    <div class="qhead"><span>${S.phase==="pre"?"Pre-test":"Post-test"} · Question ${S.i+1} of ${Q.length}</span><span class="timer" id="tm">${SECS}s after the question</span></div>
+    <div class="qbar"><i id="tbar" style="width:100%"></i></div>
+    <div class="listen"><button type="button" class="ghost play" id="play">▶ Play question</button><span class="muted" id="plays">Replays left: 2</span></div>
+    <div class="opts">${perm.map((j,k)=>`<button type="button" class="opt" data-j="${j}" aria-pressed="${arr[qi]===j}"><b>${L[k]}</b><span>${esc(q.o[j])}</span></button>`).join("")}</div>
+    <div class="actions"><span class="muted" style="font-size:13px">You have 45 seconds after the question ends.</span>
+      <button class="primary" id="next" type="button" ${arr[qi]===null?"disabled":""}>${S.i===Q.length-1?"Finish "+(S.phase==="pre"?"pre-test":"post-test"):"Next"}</button>
+    </div></section>`;
+  app.querySelectorAll(".opt").forEach(btn=>btn.addEventListener("click",()=>{arr[qi]=+btn.dataset.j;
+    app.querySelectorAll(".opt").forEach(o=>o.setAttribute("aria-pressed",o===btn));document.getElementById("next").disabled=false}));
+  document.getElementById("next").onclick=advance;
+  const au=new Audio(QA[qi]); let replays=2, started=false;
+  const pb=document.getElementById("play"), pl=document.getElementById("plays");
+  const startTimer=()=>{ if(started) return; started=true; runTimer(); };
+  au.addEventListener("ended",()=>{startTimer(); pb.disabled=replays<=0; pb.textContent=replays>0?"↻ Replay question":"No replays left"});
+  au.addEventListener("error",startTimer);
+  pb.onclick=()=>{ if(au.paused&&au.currentTime>0&&!au.ended){au.play();return}
+    if(started||au.ended){ if(replays<=0) return; replays--; pl.textContent="Replays left: "+replays; }
+    au.currentTime=0; au.play().catch(startTimer); pb.disabled=true; pb.textContent="🔊 Playing…"; };
+  au.play().then(()=>{pb.disabled=true;pb.textContent="🔊 Playing…"}).catch(()=>{pb.textContent="▶ Tap to hear the question"});
+  curAudio=au;
+}
+let curAudio=null;
+function runTimer(){
+  const end=Date.now()+SECS*1000;
+  timer=setInterval(()=>{const left=Math.max(0,Math.ceil((end-Date.now())/1000));
+    const tm=document.getElementById("tm"),tb=document.getElementById("tbar"); if(!tm){clearInterval(timer);return}
+    tm.textContent=left+"s"; tm.classList.toggle("low",left<=10); tb.style.width=(left/SECS*100)+"%";
+    if(left<=0) advance();},250);
+}
+function renderBetween(){
+  app.innerHTML = `<section class="panel">
+    <h2>Pre-test done</h2>
+    <div class="scores"><div class="score"><span>Pre-test</span><strong>${score(S.pre)}/10</strong></div></div>
+    <div class="muted">You will see which answers were right at the end. Now watch the training video. The post-test opens when the video ends.</div>
+    <div class="actions"><span></span><button class="primary" id="go" type="button">Watch the video</button></div></section>`;
+  document.getElementById("go").onclick=()=>{S.step="video";render()};
+}
+
+function renderVideo(){
+  app.innerHTML = `<section class="panel">
+    <h2>Training video: Patient cases A–G</h2>
+    <div class="muted">About 6½ minutes. Seven patients: scoring, the red score, escalation thresholds, clinical concern, and oxygen with SpO₂ Scale 2.</div>
+    <video id="v" controls playsinline preload="metadata" src="${VIDEO}"><track kind="captions" srclang="en" label="English" src="${VTT}" default></video>
+    <div class="note" id="vnote">${S.videoDone?"Video finished. You can start the post-test.":"Watch to the end to open the post-test. Captions are on."}</div>
+    <div class="actions"><span></span><button class="primary" id="go" type="button" ${S.videoDone?"":"disabled"}>Start post-test</button></div></section>`;
+  const v=document.getElementById("v");
+  v.addEventListener("ended",()=>{S.videoDone=true;document.getElementById("go").disabled=false;document.getElementById("vnote").textContent="Video finished. You can start the post-test."});
+  document.getElementById("go").onclick=()=>startPhase("post");
+}
+
+function resultLine(){
+  const d=new Date(), p=n=>String(n).padStart(2,"0");
+  const ds=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  return `NEWS Knowledge Check | Staff ID ${S.id} | Ward ${S.ward} | ${S.role} | ${ds} | Pre ${score(S.pre)}/10 | Post ${score(S.post)}/10`;
+}
+
+function renderResult(){
+  const pre=score(S.pre), post=score(S.post), ch=post-pre, pass=post>=8;
+  app.innerHTML = `<section class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Your result</h2><span class="pill ${pass?"pass":"fail"}">${pass?"Passed (8/10 or more)":"Below 8/10: review the video"}</span></div>
+    <div class="scores">
+      <div class="score"><span>Pre-test</span><strong>${pre}/10</strong></div>
+      <div class="score"><span>Post-test</span><strong>${post}/10</strong></div>
+      <div class="score"><span>Change</span><strong style="color:var(${ch>0?"--good":ch<0?"--bad":"--ink"})">${ch>0?"+":""}${ch}</strong></div>
+    </div>
+    <div>
+      <div style="font-weight:700;margin-bottom:6px">Your result record</div>
+      <div class="code" id="code">${esc(resultLine())}</div>
+    </div>
+    <div class="note">Show this screen to your team leader, or copy the record and send it to the NEWS educator.</div>
+    <div class="actions"><button class="ghost" id="again" type="button">New staff member</button><button class="primary" id="copy" type="button">Copy result</button></div>
+    <div id="copied" class="muted" hidden>Copied.</div>
+  </section>
+  <section class="panel" style="margin-top:16px">
+    <h2>Answers (post-test)</h2>
+    <div class="review">${Q.map((q,i)=>{const ok=S.post[i]===q.a;return `<div class="rv ${ok?"":"wrong"}">
+      <div><b>${i+1}.</b> ${esc(q.q)}</div>
+      ${ok?`<div class="ok">Correct: ${esc(q.o[q.a])}</div>`:`<div class="no">Your answer: ${S.post[i]===null?"none":esc(q.o[S.post[i]])}</div><div class="ok">Correct: ${esc(q.o[q.a])}</div>`}
+      <div class="muted">Covered in: ${esc(q.r)}</div></div>`}).join("")}</div>
+  </section>`;
+  document.getElementById("copy").onclick=async()=>{
+    const t=resultLine();
+    try{await navigator.clipboard.writeText(t);document.getElementById("copied").hidden=false}
+    catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById("code"));const s=getSelection();s.removeAllRanges();s.addRange(r);document.getElementById("copied").textContent="Selected. Copy it from your device menu.";document.getElementById("copied").hidden=false}
+  };
+  document.getElementById("again").onclick=()=>{Object.assign(S,{step:"start",id:"",ward:"",role:"",phase:"pre",i:0,pre:Array(Q.length).fill(null),post:Array(Q.length).fill(null),videoDone:false});render();window.scrollTo(0,0)};
+}
+document.addEventListener("copy",e=>{if(e.target.closest&&e.target.closest(".test"))e.preventDefault()});
+document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest(".test"))e.preventDefault()});
+render();
+</script>
+
+</body></html>
