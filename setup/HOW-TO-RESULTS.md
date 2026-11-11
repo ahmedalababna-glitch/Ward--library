@@ -32,3 +32,21 @@ Anyone with the PIN can see the results on the Admin page, so choose a PIN only 
 4. غيّر `1234` لرمز خاص فيك، واضغط **Save**.
 5. **Deploy ← New deployment ← (الترس) Web app**، وبعدين: Execute as: **Me**، Who has access: **Anyone** ← **Deploy** ← **Authorize access**. إذا طلعت رسالة "hasn't verified"، اضغط **Advanced** ← **Go to… (unsafe)** ← **Allow** (هاد السكربت تبعك أنت).
 6. انسخ الـ **Web app URL** (بينتهي بـ `/exec`) وابعتلي ياه.
+
+---
+
+## Update for the NEWS Knowledge Check (one time, about 3 minutes)
+
+The NEWS test (`news-test/`) saves each pre-test and post-test answer to a new tab, **NEWS results**, in the same Sheet.
+The script you deployed before does not know about it yet, so update it once. **The web app URL stays the same.**
+
+1. Open https://script.google.com and open your results project.
+2. Note your current PIN on the line `const ADMIN_PIN = "…";`.
+3. Select everything in the editor, delete it, and paste all of the new `setup/results-script.gs`.
+4. Put your PIN back on the `ADMIN_PIN` line and click **Save**.
+5. Click **Deploy → Manage deployments**, click the **pencil** (Edit), set **Version** to **New version**, then **Deploy**.
+   Do not use "New deployment": that makes a new URL and the site would stop saving.
+
+Check: take the test once with staff ID `TEST` (not counted), then open the **Admin** link at the bottom of the NEWS test page and enter your PIN.
+
+What is saved: staff ID, ward, role, date, score, and the option chosen for each question. No names.

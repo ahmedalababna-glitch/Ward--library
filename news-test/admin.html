@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEWS Knowledge Check Admin</title>
+<meta name="robots" content="noindex">
+<style>
+:root { --bg: #F3F6F7; --card: #FFFFFF; --ink: #12262B; --muted: #5E747A; --line: #DCE4E6; --teal: #0B6E75; --teal-soft: #DCEFEF; --pre: #A9BBC0; --red: #C23B3B; --red-soft: #FBE3E1; --green: #1F8A4C; --green-soft: #DDF2E5; --amber: #8A5A00; --amber-soft: #FFF1D1; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0F1A1C; --card: #172427; --ink: #E6EEF0; --muted: #9BB0B5; --line: #26373B; --teal: #3FB3B8; --teal-soft: #173538; --pre: #5B6E73; --red: #F07A72; --red-soft: #3A2120; --green: #5CC98A; --green-soft: #18321F; --amber: #F2C46B; --amber-soft: #3A2E12; } }
+:root[data-theme="dark"] { --bg: #0F1A1C; --card: #172427; --ink: #E6EEF0; --muted: #9BB0B5; --line: #26373B; --teal: #3FB3B8; --teal-soft: #173538; --pre: #5B6E73; --red: #F07A72; --red-soft: #3A2120; --green: #5CC98A; --green-soft: #18321F; --amber: #F2C46B; --amber-soft: #3A2E12; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 Inter, "Segoe UI", Roboto, Arial, sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+a { color: var(--teal); }
+.eyebrow { font-size: 12px; letter-spacing: .14em; font-weight: 700; color: var(--teal); text-transform: uppercase; }
+h1 { margin: 4px 0; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; }
+h2 { font-size: 18px; margin: 0 0 4px; }
+.sub { color: var(--muted); margin: 0; font-size: 14px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-top: 16px; }
+.btn { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+.btn.primary { background: var(--teal); color: #fff; border-color: var(--teal); }
+input, select { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 9px 12px; min-width: 0; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+@media (max-width: 640px) { .filters { grid-template-columns: 1fr 1fr; } }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 16px; }
+.kpi { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+.kpi .v { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.kpi .l { color: var(--muted); font-size: 13px; }
+.up { color: var(--green); font-weight: 700; } .down { color: var(--red); font-weight: 700; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin: 8px 0; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+.bars { display: flex; flex-direction: column; gap: 3px; }
+.bars div { height: 8px; border-radius: 4px; min-width: 2px; }
+.bars .p { background: var(--pre); } .bars .q { background: var(--teal); }
+.chip { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.chip.no { background: var(--red-soft); color: var(--red); } .chip.ok { background: var(--green-soft); color: var(--green); } .chip.mid { background: var(--amber-soft); color: var(--amber); } .chip.n { background: var(--teal-soft); color: var(--teal); }
+.gap { border-top: 1px solid var(--line); padding: 12px 0; display: grid; grid-template-columns: 34px 1fr; gap: 10px; }
+.gap:first-of-type { border-top: 0; }
+.gap .rk { font-weight: 800; font-size: 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.gap .t { font-weight: 700; }
+.gap .why { font-size: 13.5px; margin-top: 4px; }
+.gap details { margin-top: 6px; font-size: 13.5px; }
+.gap summary { cursor: pointer; color: var(--teal); font-weight: 600; }
+.dist { width: 100%; border-collapse: collapse; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.dist td, .dist th { padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.dist th { font-size: 12px; color: var(--muted); }
+.dist tr.right td:first-child { color: var(--green); font-weight: 700; }
+.themes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 10px 0 6px; }
+@media (max-width: 560px) { .themes { grid-template-columns: 1fr; } }
+.theme { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.theme b { display: block; }
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tbl { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.tbl th, .tbl td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tbl th { font-size: 12px; color: var(--muted); font-weight: 700; white-space: nowrap; }
+.heat td.c { text-align: center; font-weight: 700; min-width: 46px; border-radius: 0; }
+.heat th.c { text-align: center; }
+.h-r { background: var(--red-soft); color: var(--red); } .h-a { background: var(--amber-soft); color: var(--amber); } .h-g { background: var(--green-soft); color: var(--green); } .h-x { color: var(--muted); font-weight: 400 !important; }
+.key { columns: 2; font-size: 13px; color: var(--muted); margin: 8px 0 0; padding-left: 18px; }
+@media (max-width: 560px) { .key { columns: 1; } }
+.err { color: var(--red); font-weight: 700; }
+.demo { background: var(--amber-soft); color: var(--amber); border-radius: 12px; padding: 10px 14px; margin-top: 16px; font-weight: 600; }
+.small { font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="./">← NEWS Knowledge Check</a>
+  <div class="eyebrow" style="margin-top:10px">EWS project · Staff education</div>
+  <h1>Admin: where the NEWS knowledge gaps are</h1>
+  <p class="sub">Pre-test and post-test answers from every staff member, analysed by question, ward and person. Only people with the PIN can see this page.</p>
+
+  <div class="card" id="login">
+    <h2>Enter the admin PIN</h2>
+    <div class="row" style="margin-top:8px"><input id="pin" type="password" placeholder="PIN" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="btn" id="eye" type="button">👁 Show</button><button class="btn primary" id="go">Open results</button><button class="btn" id="demo">See an example</button></div>
+    <p class="sub" id="lmsg" style="margin-top:8px"></p>
+  </div>
+
+  <div id="dash" hidden>
+    <div class="demo" id="demonote" hidden>Example data only, so you can see how the page works. Real results appear here once staff take the test.</div>
+    <div class="row" style="margin-top:16px;justify-content:space-between">
+      <p class="sub"><span id="updated"></span><span id="testn"></span></p>
+      <div class="row"><button class="btn" id="refresh">Refresh</button><button class="btn" id="csv">Download CSV</button><button class="btn" id="logout">Lock</button></div>
+    </div>
+
+    <div class="card">
+      <div class="filters">
+        <label>Ward<select id="fward"></select></label>
+        <label>Role<select id="frole"></select></label>
+        <label>From<input id="ffrom" type="date"></label>
+        <label>To<input id="fto" type="date"></label>
+      </div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="card">
+      <h2>Where the gaps are</h2>
+      <p class="sub">Questions ranked from the weakest. Red = fewer than 80% answered correctly after the video, so the video alone does not fix it: re-teach it at the bedside or in huddles. Pre-test shows the gap in practice today.</p>
+      <div class="themes" id="themes"></div>
+      <div class="legend"><span><i style="background:var(--pre)"></i>Pre-test (before video)</span><span><i style="background:var(--teal)"></i>Post-test (after video)</span></div>
+      <div id="gaps"></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2>Gaps by ward</h2><select id="hstage"><option value="pre">Pre-test (practice today)</option><option value="post">Post-test (after video)</option></select></div>
+      <p class="sub">% correct for each question in each ward. Red under 60%, amber 60–79%, green 80% or more.</p>
+      <div class="scroll" style="margin-top:8px"><table class="tbl heat" id="heat"></table></div>
+      <ol class="key" id="key"></ol>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2>Staff</h2><input id="find" placeholder="Search staff ID"></div>
+      <p class="sub">First pre-test and best post-test for each staff ID. Staff below 8/10 are listed first, with the topics they still missed, for one-to-one follow-up.</p>
+      <div class="scroll"><table class="tbl" id="stable"></table></div>
+    </div>
+    <p class="sub small" style="margin-top:14px">The post-test is taken straight after the video with the same questions, so it shows short-term recall. To check that learning lasts, ask staff to repeat the test after 4–6 weeks: the page uses the first pre-test and the best post-test for each staff ID, and lists every attempt in the CSV.</p>
+  </div>
+</div>
+
+<script src="questions.js"></script>
+<script src="../config.js"></script>
+<script>
+const LET = "ABCD", PASS = 8, N = Q.length, THEMES = ["Timing", "Scoring", "Response"];
+const THEME_DESC = { Timing: "When to do NEWS", Scoring: "Getting the score right", Response: "What to do with the score" };
+const WARDS = ["3A", "3C", "3D", "4A", "4B", "4C", "4D", "Other"], ROLES = ["RN", "PCA", "Other"];
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+const pct = v => v == null ? "–" : Math.round(v) + "%";
+const ok = (ans, i) => LET.indexOf(ans) === Q[i].a;
+let ROWS = [], DEMO = false, TESTN = 0, STEP = "";
+const HAS_SERVER = typeof RESULTS_URL !== "undefined" && !!RESULTS_URL;
+
+// row: [timeISO, staffId, ward, role, stage, score, session, [10 answers A-D or "-"]]
+function demoRows() {
+  let seed = 11; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const base = [0.75, 0.85, 0.6, 0.35, 0.4, 0.65, 0.7, 0.55, 0.45, 0.3];   // pre-test chance of a right answer per question
+  const lift = [0.2, 0.1, 0.25, 0.45, 0.3, 0.25, 0.2, 0.35, 0.4, 0.2];     // what the video adds
+  const wardAdj = { "3A": 0, "3C": -0.05, "3D": 0.05, "4A": -0.12, "4B": 0.03, "4C": -0.08, "4D": 0.08 };
+  const out = [], t0 = Date.now() - 18 * 864e5;
+  Object.keys(wardAdj).forEach((w, wi) => {
+    const n = 6 + Math.floor(rnd() * 8);
+    for (let k = 0; k < n; k++) {
+      const id = String(100200 + wi * 97 + k * 13), role = rnd() < 0.75 ? "RN" : "PCA", day = t0 + Math.floor(rnd() * 17) * 864e5 + rnd() * 6e7, sess = "d" + wi + k;
+      const pick = (p, i) => { if (rnd() < 0.04) return "-"; if (rnd() < p) return LET[Q[i].a]; const wrong = [0, 1, 2, 3].filter(j => j !== Q[i].a); const j = rnd() < 0.6 ? wrong[i % 3] : wrong[Math.floor(rnd() * 3)]; return LET[j]; };
+      const pre = Q.map((_, i) => pick(Math.max(0.05, Math.min(0.97, base[i] + wardAdj[w] + (role === "PCA" ? -0.1 : 0))), i));
+      out.push([new Date(day).toISOString(), id, w, role, "PRE", pre.filter((a, i) => ok(a, i)).length, sess, pre]);
+      if (rnd() < 0.9) {
+        const post = Q.map((_, i) => pick(Math.max(0.05, Math.min(0.98, base[i] + lift[i] + wardAdj[w])), i));
+        out.push([new Date(day + 9e5).toISOString(), id, w, role, "POST", post.filter((a, i) => ok(a, i)).length, sess, post]);
+      }
+    }
+  });
+  return out;
+}
+
+function filtered() {
+  const w = $("fward").value, r = $("frole").value, f = $("ffrom").value, t = $("fto").value;
+  return ROWS.filter(x => (!w || x[2] === w) && (!r || x[3] === r) && (!f || x[0].slice(0, 10) >= f) && (!t || x[0].slice(0, 10) <= t));
+}
+
+// one entry per staff ID: first pre-test, first post-test (for the question analysis), best post-test (for pass)
+function people(rows) {
+  const by = {};
+  rows.slice().sort((a, b) => a[0] < b[0] ? -1 : 1).forEach(r => {
+    const id = String(r[1]).trim(), k = id.toLowerCase(), e = by[k] = by[k] || { id, ward: r[2], role: r[3], date: r[0], tries: 0 };
+    const rec = { score: +r[5], ans: r[7], time: r[0] };
+    if (r[4] === "PRE") { if (!e.pre) e.pre = rec; }
+    else { e.tries++; if (!e.post) e.post = rec; if (!e.best || rec.score >= e.best.score) e.best = rec; }
+    e.ward = r[2]; e.role = r[3];
+  });
+  return Object.values(by);
+}
+
+function qStats(P) {
+  return Q.map((q, i) => {
+    const one = recs => { const n = recs.length, c = recs.filter(a => ok(a[i], i)).length, dist = [0, 0, 0, 0], none = recs.filter(a => a[i] === "-").length; recs.forEach(a => { const j = LET.indexOf(a[i]); if (j >= 0) dist[j]++; }); return { n, rate: n ? c / n * 100 : null, dist, none }; };
+    return { i, pre: one(P.filter(e => e.pre).map(e => e.pre.ans)), post: one(P.filter(e => e.post).map(e => e.post.ans)) };
+  });
+}
+
+function render() {
+  const rows = filtered(), P = people(rows), S = qStats(P);
+  const pre = P.filter(e => e.pre), post = P.filter(e => e.post), pair = P.filter(e => e.pre && e.post);
+  const a = avg(pre.map(e => e.pre.score)), b = avg(post.map(e => e.post.score));
+  const passed = P.filter(e => e.best && e.best.score >= PASS).length, withPost = P.filter(e => e.best).length;
+  const improved = pair.filter(e => e.post.score > e.pre.score).length;
+  const gapsN = S.filter(s => s.post.rate != null && s.post.rate < 80).length;
+  $("kpis").innerHTML = [
+    [P.length, "Staff tested"],
+    [a == null ? "–" : a.toFixed(1) + " → " + (b == null ? "–" : b.toFixed(1)), "Average score /10, pre → post" + (a != null && b != null ? ` <span class="${b >= a ? "up" : "down"}">${b >= a ? "▲" : "▼"} ${Math.abs(b - a).toFixed(1)}</span>` : "")],
+    [withPost ? `${passed} / ${withPost}` : "–", `Passed (8/10 or more)${withPost ? " · " + pct(passed / withPost * 100) : ""}`],
+    [pair.length ? `${improved} / ${pair.length}` : "–", "Scored higher after the video"],
+    [`${gapsN} of ${N}`, "Questions still under 80% after the video"]
+  ].map(([v, l]) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+
+  // themes
+  $("themes").innerHTML = THEMES.map(t => {
+    const qs = S.filter(s => TOPIC[s.i].g === t), ra = avg(qs.filter(s => s.pre.rate != null).map(s => s.pre.rate)), rb = avg(qs.filter(s => s.post.rate != null).map(s => s.post.rate));
+    const cls = rb == null ? (ra == null ? "n" : ra < 80 ? "no" : "ok") : rb < 80 ? "no" : "ok";
+    return `<div class="theme"><b>${t}</b><span class="sub small">${THEME_DESC[t]} · Q${qs.map(s => s.i + 1).join(", Q")}</span><div class="row" style="margin-top:6px;justify-content:space-between"><span>${pct(ra)} → <b>${pct(rb)}</b></span><span class="chip ${cls}">${cls === "no" ? "Gap" : cls === "ok" ? "OK" : "No data"}</span></div></div>`;
+  }).join("");
+
+  // questions, weakest first (post-test if available, else pre-test)
+  const key = s => s.post.rate != null ? s.post.rate : s.pre.rate != null ? s.pre.rate : 999;
+  const order = S.slice().sort((x, y) => key(x) - key(y) || (x.pre.rate ?? 999) - (y.pre.rate ?? 999));
+  $("gaps").innerHTML = rows.length ? order.map((s, rk) => {
+    const q = Q[s.i], t = TOPIC[s.i], A = s.pre.rate, B = s.post.rate;
+    let chip;
+    if (B != null && B < 80) chip = `<span class="chip no">Gap after video</span>`;
+    else if (B != null && A != null && A < 80) chip = `<span class="chip ok">Fixed by video</span>`;
+    else if (B != null) chip = `<span class="chip n">Known</span>`;
+    else chip = A != null && A < 80 ? `<span class="chip mid">Gap before video</span>` : "";
+    const use = s.post.n ? s.post : s.pre, wrong = use.dist.map((c, j) => ({ c, j })).filter(x => x.j !== q.a && x.c > 0).sort((x, y) => y.c - x.c)[0];
+    const why = wrong ? `Most common wrong answer ${s.post.n ? "after" : "before"} the video: <b>“${esc(q.o[wrong.j])}”</b> (${wrong.c} of ${use.n})` : (use.n ? "No wrong answers." : "");
+    const none = use.none ? ` · ${use.none} ran out of time` : "";
+    const few = (s.pre.n && s.pre.n < 5) || (s.post.n && s.post.n < 5) ? ` <span class="chip mid">fewer than 5 results</span>` : "";
+    const drow = (j) => `<tr class="${j === q.a ? "right" : ""}"><td>${j === q.a ? "✓ " : ""}${esc(q.o[j])}</td><td>${s.pre.dist[j]}</td><td>${s.post.dist[j]}</td></tr>`;
+    return `<div class="gap"><div class="rk">${rk + 1}</div><div>
+      <div class="row" style="justify-content:space-between"><div class="t">Q${s.i + 1} · ${esc(t.t)}</div><div class="row">${chip}${few}<span class="chip n">${t.g}</span></div></div>
+      <div class="row" style="gap:10px;margin-top:6px"><div class="bars" style="flex:1"><div class="p" style="width:${A || 0}%"></div><div class="q" style="width:${B || 0}%"></div></div><span style="min-width:96px;text-align:right">${pct(A)} → <b>${pct(B)}</b></span></div>
+      <div class="why">${why}${none}</div>
+      <details><summary>Question and all answers</summary><p style="margin:6px 0 0">${esc(q.q)} <span class="sub">(${esc(q.r)})</span></p>
+      <table class="dist"><tr><th>Answer</th><th>Pre</th><th>Post</th></tr>${q.o.map((_, j) => drow(j)).join("")}<tr><td class="sub">No answer (time ran out)</td><td>${s.pre.none}</td><td>${s.post.none}</td></tr></table></details>
+    </div></div>`;
+  }).join("") : `<p class="sub">No results for this selection.</p>`;
+
+  renderHeat(P); renderStaff(P);
+  $("testn").textContent = DEMO || !TESTN ? "" : ` · ${TESTN} test entries (staff ID "TEST") not counted`;
+  $("updated").textContent = (DEMO ? "Example data · " : "Updated ") + new Date().toLocaleString();
+}
+
+function renderHeat(P) {
+  const st = $("hstage").value, wards = WARDS.filter(w => P.some(e => e.ward === w && e[st]));
+  const cell = v => v == null ? `<td class="c h-x">–</td>` : `<td class="c ${v < 60 ? "h-r" : v < 80 ? "h-a" : "h-g"}">${Math.round(v)}</td>`;
+  const line = (label, es) => { const recs = es.filter(e => e[st]).map(e => e[st]); return `<tr><td><b>${label}</b></td><td>${recs.length}</td><td>${recs.length ? avg(recs.map(r => r.score)).toFixed(1) : "–"}</td>${Q.map((_, i) => cell(recs.length ? recs.filter(a => ok(a.ans[i], i)).length / recs.length * 100 : null)).join("")}</tr>`; };
+  $("heat").innerHTML = `<tr><th>Ward</th><th>Staff</th><th>Avg /10</th>${Q.map((_, i) => `<th class="c" title="${esc(TOPIC[i].t)}">Q${i + 1}</th>`).join("")}</tr>` +
+    (wards.length ? wards.map(w => line(w, P.filter(e => e.ward === w))).join("") + (wards.length > 1 ? line("All", P) : "") : `<tr><td colspan="${N + 3}" class="sub">No ${st === "pre" ? "pre" : "post"}-test results for this selection.</td></tr>`);
+  $("key").innerHTML = TOPIC.map(t => `<li>${esc(t.t)}</li>`).join("");
+}
+
+function renderStaff(P) {
+  const f = $("find").value.trim().toLowerCase();
+  const list = P.filter(e => !f || e.id.toLowerCase().includes(f)).sort((a, b) => {
+    const sa = a.best ? a.best.score : -1, sb = b.best ? b.best.score : -1;
+    return (sa >= PASS) - (sb >= PASS) || sa - sb || a.id.localeCompare(b.id);
+  });
+  $("stable").innerHTML = `<tr><th>Staff ID</th><th>Ward</th><th>Role</th><th>Date</th><th>Pre</th><th>Best post</th><th>Result</th><th>Still missed after video</th></tr>` + (list.map(e => {
+    const miss = e.best ? Q.map((_, i) => i).filter(i => !ok(e.best.ans[i], i)) : [];
+    const res = !e.best ? `<span class="chip mid">No post-test</span>` : e.best.score >= PASS ? `<span class="chip ok">Passed</span>` : `<span class="chip no">Below 8</span>`;
+    return `<tr><td><b>${esc(e.id)}</b></td><td>${esc(e.ward)}</td><td>${esc(e.role)}</td><td style="white-space:nowrap">${e.date.slice(0, 10)}</td><td>${e.pre ? e.pre.score : "–"}</td><td>${e.best ? `<b>${e.best.score}</b>${e.tries > 1 ? ` <span class="sub small">(${e.tries} tries)</span>` : ""}` : "–"}</td><td>${res}</td><td class="small">${e.best ? (miss.length ? miss.map(i => `Q${i + 1} ${esc(TOPIC[i].t)}`).join("; ") : "None") : "–"}</td></tr>`;
+  }).join("") || `<tr><td colspan="8" class="sub">No results yet.</td></tr>`);
+}
+
+function csv() {
+  const head = ["Time", "Staff ID", "Ward", "Role", "Stage", "Score/10", "Session"].concat(Q.map((_, i) => "Q" + (i + 1) + " answer")).concat(Q.map((_, i) => "Q" + (i + 1) + " correct"));
+  const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const lines = [head.join(",")].concat(filtered().map(r => [r[0], q(r[1]), r[2], r[3], r[4], r[5], q(r[6])].concat(r[7]).concat(r[7].map((a, i) => ok(a, i) ? 1 : 0)).join(",")));
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], { type: "text/csv" })); a.download = "news-knowledge-check-results.csv"; a.click();
+}
+
+function jsonp(url) {
+  return new Promise((res, rej) => {
+    const cb = "newscb" + Date.now(), s = document.createElement("script"), done = () => { delete window[cb]; s.remove(); };
+    const timer = setTimeout(() => { done(); rej(new Error("net")); }, 20000);
+    window[cb] = (j) => { clearTimeout(timer); done(); res(j); };
+    s.onerror = () => { clearTimeout(timer); done(); rej(new Error("net")); };
+    s.src = url + "&callback=" + cb; document.head.appendChild(s);
+  });
+}
+async function fetchRows(pin) {
+  const url = RESULTS_URL + "?test=news&pin=" + encodeURIComponent(pin) + "&t=" + Date.now();
+  let j;
+  try { STEP = "fetch"; const r = await fetch(url); j = await r.json(); }
+  catch (e) { STEP = "jsonp after " + e.name; j = await jsonp(url); }   // for browsers that block the cross-site request
+  STEP = "render";
+  if (!j.ok) throw new Error(j.error || "error"); return j.rows;
+}
+function setRows(all) { ROWS = all.filter(r => String(r[1]).trim().toLowerCase() !== "test"); TESTN = all.length - ROWS.length; }
+async function open(pin) {
+  $("lmsg").textContent = "Loading…";
+  try { setRows(await fetchRows(pin)); DEMO = false; try { sessionStorage.setItem("news-pin", pin); } catch (e) {} show(); }
+  catch (e) { $("lmsg").innerHTML = `<span class="err">${e.message === "pin" ? "Wrong PIN." : "Could not load results here. Open them through Google instead:"}</span>${e.message === "pin" ? "" : `<div class="row" style="margin-top:8px"><a class="btn primary" style="text-decoration:none" href="${GOOGLE_ADMIN}" target="_top">Open results via Google</a></div>`}<div class="sub small" style="margin-top:6px">Details: ${esc(STEP + " · " + (e && (e.name + ": " + e.message)))}</div>`; }
+}
+function show() { $("login").hidden = true; $("dash").hidden = false; $("demonote").hidden = !DEMO; render(); }
+
+$("fward").innerHTML = `<option value="">All wards</option>` + WARDS.map(w => `<option>${w}</option>`).join("");
+$("frole").innerHTML = `<option value="">All roles</option>` + ROLES.map(w => `<option>${w}</option>`).join("");
+["fward", "frole", "ffrom", "fto", "hstage"].forEach(id => $(id).onchange = render);
+$("find").oninput = () => renderStaff(people(filtered()));
+$("csv").onclick = csv;
+$("demo").onclick = () => { ROWS = demoRows(); TESTN = 0; DEMO = true; show(); };
+$("go").onclick = () => { const p = $("pin").value.trim(); if (!p) return; if (!HAS_SERVER) { $("lmsg").innerHTML = `<span class="err">The results store is not connected yet. Tap "See an example" to preview.</span>`; return; } open(p); };
+$("eye").onclick = () => { const p = $("pin"), s = p.type === "password"; p.type = s ? "text" : "password"; $("eye").textContent = s ? "🙈 Hide" : "👁 Show"; };
+$("pin").onkeydown = e => { if (e.key === "Enter") $("go").click(); };
+$("refresh").onclick = () => { if (DEMO) return render(); let p = ""; try { p = sessionStorage.getItem("news-pin") || ""; } catch (e) {} if (p) open(p); };
+$("logout").onclick = () => { try { sessionStorage.removeItem("news-pin"); } catch (e) {} ROWS = []; $("dash").hidden = true; $("login").hidden = false; $("pin").value = ""; $("lmsg").textContent = ""; };
+const GOOGLE_ADMIN = (typeof ADMIN_URL !== "undefined" ? ADMIN_URL : (HAS_SERVER ? RESULTS_URL : "")) + "?view=newsadmin";
+if (typeof PRELOAD !== "undefined") {
+  // page served from Google with the results already inside
+  setRows(PRELOAD); DEMO = false; show();
+  $("refresh").onclick = $("logout").onclick = () => { window.top.location.href = GOOGLE_ADMIN; };
+} else {
+  try { const p = sessionStorage.getItem("news-pin"); if (p && HAS_SERVER) open(p); } catch (e) {}
+  if (!HAS_SERVER) $("lmsg").textContent = "The results store is not connected yet. You can preview the page with example data.";
+}
+</script>
+</body>
+</html>
