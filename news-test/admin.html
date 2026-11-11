@@ -64,6 +64,10 @@ input, select { border: 1px solid var(--line); background: var(--card); border-r
 @media (max-width: 560px) { .key { columns: 1; } }
 .err { color: var(--red); font-weight: 700; }
 .demo { background: var(--amber-soft); color: var(--amber); border-radius: 12px; padding: 10px 14px; margin-top: 16px; font-weight: 600; }
+.mrow { border-top: 1px solid var(--line); padding: 12px 0; display: grid; grid-template-columns: 34px 1fr; gap: 10px; }
+.mrow:first-child { border-top: 0; }
+.mrow .rk { font-weight: 800; font-size: 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mbar { height: 8px; border-radius: 4px; background: var(--red); min-width: 2px; }
 .small { font-size: 12.5px; }
 </style>
 </head>
@@ -97,6 +101,12 @@ input, select { border: 1px solid var(--line); background: var(--card); border-r
     </div>
 
     <div class="kpis" id="kpis"></div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2>Most common mistakes</h2><select id="mstage"><option value="pre">Before the video (practice today)</option><option value="post">After the video</option></select></div>
+      <p class="sub">Every wrong answer across all questions, ranked by how many staff chose it, with the wards where it happened most. This is the exact wrong belief to correct.</p>
+      <div id="mist"></div>
+    </div>
 
     <div class="card">
       <h2>Where the gaps are</h2>
@@ -230,9 +240,37 @@ function render() {
     </div></div>`;
   }).join("") : `<p class="sub">No results for this selection.</p>`;
 
-  renderHeat(P); renderStaff(P);
+  renderMistakes(P); renderHeat(P); renderStaff(P);
   $("testn").textContent = DEMO || !TESTN ? "" : ` · ${TESTN} test entries (staff ID "TEST") not counted`;
   $("updated").textContent = (DEMO ? "Example data · " : "Updated ") + new Date().toLocaleString();
+}
+
+function renderMistakes(P) {
+  const st = $("mstage").value, other = st === "pre" ? "post" : "pre";
+  const recs = P.filter(e => e[st]), orecs = P.filter(e => e[other]);
+  if (!recs.length) { $("mist").innerHTML = `<p class="sub">No ${st === "pre" ? "pre" : "post"}-test results for this selection.</p>`; return; }
+  const list = [];
+  Q.forEach((q, i) => ["0", "1", "2", "3", "-"].forEach(k => {
+    if (k !== "-" && +k === q.a) return;
+    const hit = e => k === "-" ? e.ans[i] === "-" : LET.indexOf(e.ans[i]) === +k;
+    const who = recs.filter(e => hit(e[st])); if (!who.length) return;
+    const wards = WARDS.map(w => { const n = recs.filter(e => e.ward === w).length, c = who.filter(e => e.ward === w).length; return { w, n, c, p: n ? c / n * 100 : 0 }; })
+      .filter(x => x.c > 0).sort((a, b) => b.p - a.p || b.c - a.c);
+    const oc = orecs.filter(e => hit(e[other])).length;
+    list.push({ i, k, c: who.length, p: who.length / recs.length * 100, wards, op: orecs.length ? oc / orecs.length * 100 : null });
+  }));
+  list.sort((a, b) => b.c - a.c);
+  const top = list.slice(0, 10), max = top.length ? top[0].p : 100;
+  $("mist").innerHTML = top.map((m, rk) => {
+    const q = Q[m.i], ans = m.k === "-" ? "No answer: time ran out" : "“" + esc(q.o[+m.k]) + "”";
+    const cmp = m.op == null ? "" : ` · ${st === "pre" ? "after" : "before"} the video: ${pct(m.op)}`;
+    return `<div class="mrow"><div class="rk">${rk + 1}</div><div>
+      <div style="font-weight:700">${ans}</div>
+      <div class="sub small">Q${m.i + 1} · ${esc(TOPIC[m.i].t)} · correct: ${esc(q.o[q.a])}</div>
+      <div class="row" style="gap:10px;margin-top:6px"><div style="flex:1"><div class="mbar" style="width:${m.p / max * 100}%"></div></div><span style="min-width:120px;text-align:right"><b>${m.c} of ${recs.length}</b> staff (${pct(m.p)})</span></div>
+      <div class="small" style="margin-top:4px">Most in: ${m.wards.slice(0, 3).map(x => `<span class="chip no" style="margin:2px 4px 2px 0">${x.w} ${Math.round(x.p)}% <span style="font-weight:400">(${x.c}/${x.n})</span></span>`).join("")}<span class="sub">${cmp}</span></div>
+    </div></div>`;
+  }).join("") + (list.length > 10 ? `<p class="sub small" style="margin-top:6px">Showing the top 10 of ${list.length} different wrong answers. The CSV has every answer.</p>` : "");
 }
 
 function renderHeat(P) {
@@ -291,7 +329,7 @@ function show() { $("login").hidden = true; $("dash").hidden = false; $("demonot
 
 $("fward").innerHTML = `<option value="">All wards</option>` + WARDS.map(w => `<option>${w}</option>`).join("");
 $("frole").innerHTML = `<option value="">All roles</option>` + ROLES.map(w => `<option>${w}</option>`).join("");
-["fward", "frole", "ffrom", "fto", "hstage"].forEach(id => $(id).onchange = render);
+["fward", "frole", "ffrom", "fto", "hstage", "mstage"].forEach(id => $(id).onchange = render);
 $("find").oninput = () => renderStaff(people(filtered()));
 $("csv").onclick = csv;
 $("demo").onclick = () => { ROWS = demoRows(); TESTN = 0; DEMO = true; show(); };
