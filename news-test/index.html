@@ -24,7 +24,7 @@ header{display:flex;flex-direction:column;gap:4px;margin-bottom:18px}
 h1{font-family:var(--f-display);font-size:28px;line-height:1.15;margin:0;text-wrap:balance}
 h2{font-family:var(--f-display);font-size:22px;line-height:1.2;margin:0;text-wrap:balance}
 .muted{color:var(--muted)}
-.track{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:14px 0 22px}
+.track{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:14px 0 22px}
 .track div{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--muted);font-weight:600}
 .track div::before{content:"";height:6px;border-radius:3px;background:var(--line)}
 .track div.done::before{background:var(--accent)}
@@ -74,9 +74,9 @@ video{width:100%;max-width:100%;border-radius:10px;background:#000;aspect-ratio:
   <header>
     <div class="eyebrow">EWS project · Staff education</div>
     <h1>NEWS Knowledge Check</h1>
-    <div class="muted">Pre-test, training video (Patient cases A–G), then the same test again. About 15 minutes.</div>
+    <div class="muted" id="intro">Pre-test, then the training video (Patient cases A–G). About 10 minutes.</div>
   </header>
-  <div class="track" id="track"><div>1 · Pre-test</div><div>2 · Video</div><div>3 · Post-test</div><div>4 · Result</div></div>
+  <div class="track" id="track"><div>1 · Pre-test</div><div>2 · Video</div><div>3 · Done</div></div>
   <main id="app"></main>
   <p style="margin-top:28px;text-align:center;font-size:13px"><a id="adminlink" href="admin.html" style="color:var(--muted)">🔒 Admin (EWS project team)</a></p>
 </div>
@@ -88,6 +88,16 @@ const QA = ["audio/q0.mp3", "audio/q1.mp3", "audio/q2.mp3", "audio/q3.mp3", "aud
 const VIDEO = "video.mp4";
 const VTT = "data:text/vtt;base64,V0VCVlRUCgoxCjAwOjAwOjAwLjgwMCAtLT4gMDA6MDA6MDUuMzk5ClBhdGllbnQgQS4gQSBmaWZ0eS1mb3VyIHllYXIgb2xkIG1hbiwgYWRtaXR0ZWQgdG8gdGhlIHdhcmQgdHdvIGhvdXJzIGFnby4KCjIKMDA6MDA6MDcuMDk5IC0tPiAwMDowMDoxMC4yNzgKSGlzIGZpcnN0IE5FV1MgbXVzdCBiZSBkb25lIHdpdGhpbiBmb3VyIGhvdXJzIG9mIGFkbWlzc2lvbi4KCjMKMDA6MDA6MTAuNDc4IC0tPiAwMDowMDoxNS4zMjUKVGhlIG51cnNlIG1lYXN1cmVzIGFsbCBzaXggdml0YWwgc2lnbnMsIGFuZCByZWNvcmRzIHRoZW0gaW4gdGhlIEVNUiBzdHJhaWdodCBhd2F5LgoKNAowMDowMDoxNy40MjUgLS0+IDAwOjAwOjIwLjkwOQpFdmVyeSBwYXJhbWV0ZXIgaXMgaW4gdGhlIG5vcm1hbCByYW5nZS4gVGhlIE5FV1MgaXMgemVyby4KCjUKMDA6MDA6MjIuOTA5IC0tPiAwMDowMDoyNC45MDEKQSBzY29yZSBvZiB6ZXJvIG1lYW5zIHJvdXRpbmUgY2FyZS4KCjYKMDA6MDA6MjUuMTAxIC0tPiAwMDowMDoyOS40MTgKQ29udGludWUgTkVXUyB3aXRoIGV2ZXJ5IHNldCBvZiBvYnNlcnZhdGlvbnMsIGF0IGxlYXN0IGV2ZXJ5IGZvdXIgaG91cnMuCgo3CjAwOjAwOjI5LjYxOCAtLT4gMDA6MDA6MzEuNzk0CklmIGhpcyBjb25kaXRpb24gY2hhbmdlcywgY2hlY2sgc29vbmVyLgoKOAowMDowMDozNC4wOTQgLS0+IDAwOjAwOjQwLjk3MQpLZXkgcG9pbnQ6IGV2ZW4gYSB6ZXJvIG5lZWRzIGEgZmlyc3QgTkVXUyB3aXRoaW4gZm91ciBob3VycyBvZiBhZG1pc3Npb24sIGFuZCB0aGVuIGF0IGxlYXN0IGV2ZXJ5IGZvdXIgaG91cnMuCgo5CjAwOjAwOjQ0LjIwMCAtLT4gMDA6MDA6NDguNTExClBhdGllbnQgQi4gQSBzaXh0eS10d28geWVhciBvbGQgd29tYW4sIG9uIGRheSB0d28gYWZ0ZXIgc3VyZ2VyeS4KCjEwCjAwOjAwOjUwLjIxMSAtLT4gMDA6MDA6NTQuMzYzCkF0IHRoZSByb3V0aW5lIGNoZWNrLCB0aGUgcGF0aWVudCBjYXJlIGFzc2lzdGFudCBtZWFzdXJlcyBoZXIgdml0YWwgc2lnbnMuCgoxMQowMDowMDo1NC41NjMgLS0+IDAwOjAxOjAwLjUwNwpIZXIgdGVtcGVyYXR1cmUgaXMgdGhpcnR5LWVpZ2h0IHBvaW50IHRocmVlLCBhbmQgaGVyIHB1bHNlIGlzIG5pbmV0eS1zaXguIFNoZSB0ZWxscyB0aGUgbnVyc2Ugc3RyYWlnaHQgYXdheS4KCjEyCjAwOjAxOjAyLjYwNyAtLT4gMDA6MDE6MTEuMjgyClRoZSBFTVIgc2NvcmVzIG9uZSBlYWNoIGZvciBveHlnZW4gc2F0dXJhdGlvbiwgcHVsc2UsIGFuZCB0ZW1wZXJhdHVyZS4gVGhlIHRvdGFsIGlzIHRocmVlLCBhbmQgbm8gc2luZ2xlIHBhcmFtZXRlciBzY29yZXMgdGhyZWUuCgoxMwowMDowMToxMy4yODIgLS0+IDAwOjAxOjE4LjA0NQpBIHNjb3JlIG9mIG9uZSB0byBmb3VyIG1lYW5zIHRoZSByZWdpc3RlcmVkIG51cnNlIGF0dGVuZHMsIGFuZCBhc3Nlc3NlcyB0aGUgcGF0aWVudC4KCjE0CjAwOjAxOjE4LjI0NSAtLT4gMDA6MDE6MjEuODM1ClRoZSBudXJzZSBkZWNpZGVzIHdoZXRoZXIgdG8gbW9uaXRvciBtb3JlIG9mdGVuLCBvciB0byBlc2NhbGF0ZS4KCjE1CjAwOjAxOjIyLjAzNSAtLT4gMDA6MDE6MjYuNTkwCklmIHNoZSBpcyBjb25jZXJuZWQsIG9yIHRoZSBzY29yZSBpcyByaXNpbmcgZmFzdCwgc2hlIHRlbGxzIHRoZSB0ZWFtIGxlYWRlci4KCjE2CjAwOjAxOjI4Ljg5MCAtLT4gMDA6MDE6MzUuNDAwCktleSBwb2ludDogYSBsb3cgc2NvcmUgc3RpbGwgbmVlZHMgYSByZWdpc3RlcmVkIG51cnNlIHRvIGFzc2VzcyB0aGUgcGF0aWVudCwgYW5kIGRlY2lkZSB3aGF0IGhhcHBlbnMgbmV4dC4KCjE3CjAwOjAxOjM4LjYwMCAtLT4gMDA6MDE6NDMuMzg2ClBhdGllbnQgQy4gQSBzZXZlbnR5LWVpZ2h0IHllYXIgb2xkIG1hbiwgYWRtaXR0ZWQgd2l0aCBhIHVyaW5lIGluZmVjdGlvbi4KCjE4CjAwOjAxOjQ1LjA4NiAtLT4gMDA6MDE6NDcuMTgwCkhpcyBvYnNlcnZhdGlvbnMgbG9vayBhbG1vc3Qgbm9ybWFsLgoKMTkKMDA6MDE6NDcuMzgwIC0tPiAwMDowMTo1MS4xMzQKQnV0IHRvZGF5LCBoZSBkb2Vzbid0IGtub3cgd2hlcmUgaGUgaXMuIEhpcyBmYW1pbHkgc2F5IHRoaXMgaXMgbmV3LgoKMjAKMDA6MDE6NTEuMzM0IC0tPiAwMDowMTo1NS4zNDIKTmV3IGNvbmZ1c2lvbiBpcyByZWNvcmRlZCBhcyBDLCBvbiB0aGUgQUNWUFUgc2NhbGUuCgoyMQowMDowMTo1Ny40NDIgLS0+IDAwOjAyOjA0LjQ3OQpOZXcgY29uZnVzaW9uIHNjb3JlcyB0aHJlZSBvbiBpdHMgb3duLiBUaGUgdG90YWwgaXMgb25seSB0aHJlZSwgYnV0IHRoaXMgaXMgYSByZWQgc2NvcmUgaW4gYSBzaW5nbGUgcGFyYW1ldGVyLgoKMjIKMDA6MDI6MDYuNDc5IC0tPiAwMDowMjowOS42MTIKQSByZWQgc2NvcmUgbWVhbnMgdGhlIG51cnNlIGluZm9ybXMgdGhlIG1lZGljYWwgdGVhbS4KCjIzCjAwOjAyOjA5LjgxMiAtLT4gMDA6MDI6MTIuODA1ClRoZSBkb2N0b3IgbXVzdCBhc3Nlc3MgdGhlIHBhdGllbnQgd2l0aGluIHRoaXJ0eSBtaW51dGVzLgoKMjQKMDA6MDI6MTMuMDA1IC0tPiAwMDowMjoxNi40NzYKVW50aWwgdGhlbiwgcmVwZWF0IHRoZSBvYnNlcnZhdGlvbnMgZXZlcnkgdGhpcnR5IG1pbnV0ZXMuCgoyNQowMDowMjoxOC43NzYgLS0+IDAwOjAyOjI2Ljc4MwpLZXkgcG9pbnQ6IG5ldmVyIHdhaXQgZm9yIHRoZSB0b3RhbC4gQSBzaW5nbGUgdGhyZWUgbWVhbnMgY2FsbCB0aGUgZG9jdG9yLiBBbmQgdHJlYXQgY29uZnVzaW9uIGFzIG5ldywgdW50aWwgcHJvdmVuIG90aGVyd2lzZS4KCjI2CjAwOjAyOjMwLjAwMCAtLT4gMDA6MDI6MzQuNjE3ClBhdGllbnQgRC4gQSBzaXh0eS1maXZlIHllYXIgb2xkIHdvbWFuLCBhZG1pdHRlZCB3aXRoIGEgY2hlc3QgaW5mZWN0aW9uLgoKMjcKMDA6MDI6MzYuMzE3IC0tPiAwMDowMjozOS4xNTUKQXQgdGVuIG8nY2xvY2ssIHRoZSBudXJzZSBtZWFzdXJlcyBoZXIgdml0YWwgc2lnbnMuCgoyOAowMDowMjozOS4zNTUgLS0+IDAwOjAyOjQ0LjUxNApIZXIgYnJlYXRoaW5nIGlzIGZhc3RlciwgaGVyIHRlbXBlcmF0dXJlIGlzIHVwLCBhbmQgaGVyIGJsb29kIHByZXNzdXJlIGlzIGxvd2VyIHRoYW4geWVzdGVyZGF5LgoKMjkKMDA6MDI6NDYuNjE0IC0tPiAwMDowMjo0OC44ODUKVGhlIEVNUiBjYWxjdWxhdGVzIGEgTkVXUyBvZiBzaXguCgozMAowMDowMjo0OS4wODUgLS0+IDAwOjAyOjUzLjg2OQpGaXZlIG9yIG1vcmUgaXMgdGhlIHVyZ2VudCByZXNwb25zZSB0aHJlc2hvbGQuIFdpdGggYW4gaW5mZWN0aW9uLCB0aGluayBzZXBzaXMuCgozMQowMDowMjo1NS44NjkgLS0+IDAwOjAzOjAxLjQ5MgpUaGUgbnVyc2UgaW5mb3JtcyB0aGUgdGVhbSBsZWFkZXIsIGFuZCBjYWxscyB0aGUgb24tY2FsbCBkb2N0b3IgYXQgb25jZSwgdXNpbmcgU0JBUi4KCjMyCjAwOjAzOjAxLjY5MiAtLT4gMDA6MDM6MDUuMDg2ClRoZSBkb2N0b3IgbXVzdCByZXZpZXcgaGVyIGF0IHRoZSBiZWRzaWRlIHdpdGhpbiB0ZW4gbWludXRlcy4KCjMzCjAwOjAzOjA1LjI4NiAtLT4gMDA6MDM6MDkuOTYxCk9ic2VydmF0aW9ucyBhcmUgcmVwZWF0ZWQgZXZlcnkgZmlmdGVlbiB0byB0aGlydHkgbWludXRlcywgaW4gYSBtb25pdG9yZWQgYXJlYS4KCjM0CjAwOjAzOjEyLjI2MSAtLT4gMDA6MDM6MTkuMjg5CktleSBwb2ludDogZml2ZSBvciBtb3JlIGlzIHVyZ2VudC4gQ2FsbCB1c2luZyBTQkFSLCBhbmQgZG9jdW1lbnQgdGhlIHRpbWUgb2YgdGhlIGNhbGwgYW5kIHRoZSByZXNwb25zZS4KCjM1CjAwOjAzOjIyLjUyMCAtLT4gMDA6MDM6MjcuMjE5ClBhdGllbnQgRS4gQSBzZXZlbnR5IHllYXIgb2xkIG1hbiwgdHdvIGRheXMgYWZ0ZXIgYWJkb21pbmFsIHN1cmdlcnkuCgozNgowMDowMzoyOC45MTkgLS0+IDAwOjAzOjMxLjQxNApIZSBpcyBicmVhdGhpbmcgZmFzdCwgYXQgdHdlbnR5LWZpdmUgYSBtaW51dGUuCgozNwowMDowMzozMS42MTQgLS0+IDAwOjAzOjM5LjIyNQpIaXMgb3h5Z2VuIHNhdHVyYXRpb24gaXMgbmluZXR5LXR3bywgaGlzIHB1bHNlIGlzIG9uZSBodW5kcmVkIGFuZCBlaWdodGVlbiwgYW5kIGhpcyBibG9vZCBwcmVzc3VyZSBoYXMgZHJvcHBlZCB0byBuaW5ldHktZWlnaHQuCgozOAowMDowMzo0MS4zMjUgLS0+IDAwOjAzOjQyLjM4NApUaGUgTkVXUyBpcyBuaW5lLgoKMzkKMDA6MDM6NDIuNTg0IC0tPiAwMDowMzo0NS43MzEKU2V2ZW4gb3IgbW9yZSBpcyB0aGUgZW1lcmdlbmN5IHJlc3BvbnNlIHRocmVzaG9sZC4KCjQwCjAwOjAzOjQ3LjczMSAtLT4gMDA6MDM6NTQuMzA3ClRoZSBudXJzZSBpbmZvcm1zIHRoZSBtZWRpY2FsIHRlYW0gaW1tZWRpYXRlbHkuIEhlIG1vdmVzIHRvIGEgbW9uaXRvcmVkIGJlZCwgd2l0aCBjb250aW51b3VzIG1vbml0b3JpbmcuCgo0MQowMDowMzo1NC41MDcgLS0+IDAwOjAzOjU5LjM5MwpUaGUgZG9jdG9yIHJldmlld3MgaGltIGF0IHRoZSBiZWRzaWRlIHdpdGhpbiB0ZW4gbWludXRlcywgYW5kIGVzY2FsYXRlcyB0byB0aGUgY29uc3VsdGFudC4KCjQyCjAwOjAzOjU5LjU5MyAtLT4gMDA6MDQ6MDUuOTI2CkEgdGVhbSB3aXRoIGNyaXRpY2FsIGNhcmUgc2tpbGxzIGFzc2Vzc2VzIGhpbSwgYW5kIHRyYW5zZmVyIHRvIEhEVSBvciBJQ1UgaXMgY29uc2lkZXJlZC4KCjQzCjAwOjA0OjA2LjEyNiAtLT4gMDA6MDQ6MDcuOTg0CklmIGhlIGFycmVzdHMsIGNhbGwgQ29kZSBCbHVlLgoKNDQKMDA6MDQ6MTAuMjg0IC0tPiAwMDowNDoxNC43MTUKS2V5IHBvaW50OiBzZXZlbiBvciBtb3JlIGlzIGFuIGVtZXJnZW5jeS4gR2V0IGNyaXRpY2FsIGNhcmUgaGVscCwgbm93LgoKNDUKMDA6MDQ6MTcuOTIwIC0tPiAwMDowNDoyMi40NjAKUGF0aWVudCBGLiBBIGZpZnR5LWVpZ2h0IHllYXIgb2xkIHdvbWFuLCBhZG1pdHRlZCB3aXRoIGFiZG9taW5hbCBwYWluLgoKNDYKMDA6MDQ6MjQuMTYwIC0tPiAwMDowNDoyNS44NjQKVGhlIG51cnNlIGNoZWNrcyBoZXIgdml0YWwgc2lnbnMuCgo0NwowMDowNDoyNi4wNjQgLS0+IDAwOjA0OjMxLjk4OApIZXIgc29uIHNheXMgc2hlIGxvb2tzIG11Y2ggd29yc2UgdGhhbiB0aGlzIG1vcm5pbmcuIFNoZSBpcyBwYWxlLCBzd2VhdHksIGFuZCBoZXIgcGFpbiBpcyBnZXR0aW5nIHdvcnNlLgoKNDgKMDA6MDQ6MzQuMDg4IC0tPiAwMDowNDozNy4wMDkKSGVyIE5FV1MgaXMgb25seSBvbmUsIGJ1dCB0aGUgbnVyc2UgaXMgd29ycmllZCB0b28uCgo0OQowMDowNDozNy4yMDkgLS0+IDAwOjA0OjQxLjAzNQpDbGluaWNhbCBjb25jZXJuLCBhbmQgdGhlIGZhbWlseSdzIGNvbmNlcm4sIGNhbiBvdmVycmlkZSB0aGUgc2NvcmUuCgo1MAowMDowNDo0My4wMzUgLS0+IDAwOjA0OjQ2LjQ3NgpUaGUgbnVyc2UgZXNjYWxhdGVzIHRvIHRoZSBtZWRpY2FsIHRlYW0sIGFuZCBhc2tzIGZvciBhIHJldmlldy4KCjUxCjAwOjA0OjQ2LjY3NiAtLT4gMDA6MDQ6NTMuNDkxCklmIHRoZSBkb2N0b3IgZG9lcyBub3QgcmVzcG9uZCwgc2hlIGNhbGxzIHRoZSBzZW5pb3IgcmVzaWRlbnQgb3IgY29uc3VsdGFudCwgYW5kIGluZm9ybXMgdGhlIG51cnNpbmcgc3VwZXJ2aXNvci4KCjUyCjAwOjA0OjUzLjY5MSAtLT4gMDA6MDQ6NTcuMjEwCklmIGVzY2FsYXRpb24gc3RpbGwgZmFpbHMsIHNoZSBjb21wbGV0ZXMgYW4gaW5jaWRlbnQgcmVwb3J0LgoKNTMKMDA6MDQ6NTkuNTExIC0tPiAwMDowNTowNC44NjAKS2V5IHBvaW50OiBpZiB5b3UgYXJlIHdvcnJpZWQsIGVzY2FsYXRlLCB3aGF0ZXZlciB0aGUgc2NvcmUuIExpc3RlbiB0byBwYXRpZW50cyBhbmQgZmFtaWxpZXMuCgo1NAowMDowNTowOC4wODAgLS0+IDAwOjA1OjE2Ljk2NQpQYXRpZW50IEcuIEEgc2l4dHktZWlnaHQgeWVhciBvbGQgbWFuIHdpdGggQ09QRCwgYWRtaXR0ZWQgd2l0aCBhIGNoZXN0IGluZmVjdGlvbi4gSGUgaXMgb24gdHdvIGxpdHJlcyBvZiBveHlnZW4sIGJ5IG5hc2FsIGNhbm51bGEuCgo1NQowMDowNToxOC42NjUgLS0+IDAwOjA1OjI4LjU1NQpIaXMgZG9jdG9yIGhhcyBkb2N1bWVudGVkIHR5cGUgdHdvIHJlc3BpcmF0b3J5IGZhaWx1cmUsIHdpdGggYSB0YXJnZXQgc2F0dXJhdGlvbiBvZiBlaWdodHktZWlnaHQgdG8gbmluZXR5LXR3byBwZXJjZW50LCBhbmQgaGFzIG9yZGVyZWQgU3BP4oKCIFNjYWxlIDIuCgo1NgowMDowNToyOC43NTUgLS0+IDAwOjA1OjM0LjIxNwpUaGUgbnVyc2UgbWVhc3VyZXMgaGlzIHZpdGFsIHNpZ25zLiBIaXMgc2F0dXJhdGlvbiBpcyBlaWdodHktbmluZSBwZXJjZW50LCBvbiBveHlnZW4uCgo1NwowMDowNTozNC40MTcgLS0+IDAwOjA1OjQwLjc0MApTaGUgcmVjb3JkcyB0aGUgb3h5Z2VuIGZsb3cgcmF0ZSwgdHdvIGxpdHJlcyBhIG1pbnV0ZSwgYW5kIHRoZSBkZXZpY2UsIG5hc2FsIGNhbm51bGEsIG9uIHRoZSBORVdTIGNoYXJ0LgoKNTgKMDA6MDU6NDIuODQwIC0tPiAwMDowNTo0OC4xNjMKT24gU2NhbGUgMiwgYSBzYXR1cmF0aW9uIG9mIGVpZ2h0eS1uaW5lIGlzIGluc2lkZSBoaXMgdGFyZ2V0LCBzbyBpdCBzY29yZXMgemVyby4KCjU5CjAwOjA1OjQ4LjM2MyAtLT4gMDA6MDU6NTMuMjQ2CkJlY2F1c2UgaGUgaXMgb24gc3VwcGxlbWVudGFsIG94eWdlbiwgdHdvIHBvaW50cyBhcmUgYWRkZWQuIFRoZSBORVdTIGlzIHRocmVlLgoKNjAKMDA6MDU6NTMuNDQ2IC0tPiAwMDowNTo1OS4zMzkKSWYgU2NhbGUgMSB3ZXJlIHVzZWQgYnkgbWlzdGFrZSwgdGhlIHNhbWUgc2F0dXJhdGlvbiB3b3VsZCBzY29yZSB0aHJlZSwgYW5kIHRoZSB0b3RhbCB3b3VsZCBiZSBzaXguCgo2MQowMDowNjowMS4zMzkgLS0+IDAwOjA2OjA2Ljc0MgpBIHNjb3JlIG9mIHRocmVlIG1lYW5zIHRoZSByZWdpc3RlcmVkIG51cnNlIGFzc2Vzc2VzIGhpbSwgYW5kIGRlY2lkZXMgaG93IG9mdGVuIHRvIG1vbml0b3IuCgo2MgowMDowNjowNi45NDIgLS0+IDAwOjA2OjE2LjA4OApLZWVwIGhpcyBzYXR1cmF0aW9uIGluIHRoZSB0YXJnZXQgcmFuZ2UsIGVpZ2h0eS1laWdodCB0byBuaW5ldHktdHdvIHBlcmNlbnQuIFRvbyBtdWNoIG94eWdlbiBjYW4gY2F1c2UgZGFuZ2Vyb3VzIGNhcmJvbiBkaW94aWRlIHJldGVudGlvbi4KCjYzCjAwOjA2OjE2LjI4OCAtLT4gMDA6MDY6MjEuOTE5CklmIHRoZXJlIGlzIG5vIHBoeXNpY2lhbidzIG9yZGVyIGZvciBTY2FsZSAyLCB1c2UgU2NhbGUgMSwgYW5kIGNyb3NzIG91dCB0aGUgc2NhbGUgbm90IGluIHVzZS4KCjY0CjAwOjA2OjI0LjIxOSAtLT4gMDA6MDY6MzQuMTQxCktleSBwb2ludDogb3h5Z2VuIGFkZHMgdHdvIHBvaW50cyB0byB0aGUgTkVXUy4gVXNlIFNjYWxlIDIgb25seSBmb3IgaHlwZXJjYXBuaWMgcGF0aWVudHMsIHN1Y2ggYXMgQ09QRCwgd2l0aCBhIHBoeXNpY2lhbidzIG9yZGVyIGFuZCBhIHNldCB0YXJnZXQuCg==";
 const L = "ABCD";
+// ---- Post-test switch ----
+// false = pre-test + video only (current rollout). true = bring back the post-test after the video.
+const POST_TEST = false;
+// Show the correct answers at the end when there is no post-test? Kept off so a later post-test
+// with the same questions still measures real learning.
+const SHOW_ANSWERS_PRE_ONLY = false;
+if (POST_TEST) {
+  document.getElementById("intro").textContent = "Pre-test, training video (Patient cases A–G), then the same test again. About 15 minutes.";
+  document.getElementById("track").innerHTML = "<div>1 · Pre-test</div><div>2 · Video</div><div>3 · Post-test</div><div>4 · Result</div>";
+}
 const S = { step:"start", id:"", ward:"", role:"", phase:"pre", i:0, pre:Array(Q.length).fill(null), post:Array(Q.length).fill(null), videoDone:false, start:null };
 const app = document.getElementById("app");
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -118,8 +128,9 @@ flush();
 if (HAS_SERVER) document.getElementById("adminlink").href = RESULTS_URL + "?view=newsadmin";
 
 function setTrack(){
-  const m={start:["","","",""],between:["done","now","",""],video:["done","now","",""],result:["done","done","done","done"]};
-  const st=S.step==="test"?(S.phase==="pre"?["now","","",""]:["done","done","now",""]):m[S.step];
+  const m=POST_TEST?{start:["","","",""],between:["done","now","",""],video:["done","now","",""],result:["done","done","done","done"]}
+                   :{start:["","",""],between:["done","now",""],video:["done","now",""],result:["done","done","done"]};
+  const st=S.step==="test"?(S.phase==="pre"?(POST_TEST?["now","","",""]:["now","",""]):["done","done","now",""]):m[S.step];
   document.querySelectorAll("#track div").forEach((d,i)=>d.className=st[i]);
 }
 
@@ -135,7 +146,7 @@ function render(){
 function renderStart(){
   app.innerHTML = `<form class="panel" id="f">
     <h2>Before you start</h2>
-    <div class="muted">Turn on the sound or use headphones: each question is spoken, not shown, and you can replay it twice. Answer on your own, without looking anything up. You have 45 seconds after each question, and the order is different for every person. Then watch the video and answer the same questions again.</div>
+    <div class="muted">Turn on the sound or use headphones: each question is spoken, not shown, and you can replay it twice. Answer on your own, without looking anything up. You have 45 seconds after each question, and the order is different for every person. Then watch the training video${POST_TEST?" and answer the same questions again":""}.</div>
     <label for="sid">Staff ID<input id="sid" required autocomplete="off" value="${esc(S.id)}" placeholder="e.g. 102345"></label>
     <div class="row">
       <label for="ward">Ward<select id="ward" required>
@@ -204,30 +215,66 @@ function renderBetween(){
   app.innerHTML = `<section class="panel">
     <h2>Pre-test done</h2>
     <div class="scores"><div class="score"><span>Pre-test</span><strong>${score(S.pre)}/10</strong></div></div>
-    <div class="muted">You will see which answers were right at the end. Now watch the training video. The post-test opens when the video ends.</div>
+    <div class="muted">${POST_TEST?"You will see which answers were right at the end. Now watch the training video. The post-test opens when the video ends.":"Now watch the training video. It explains every topic in the test."}</div>
     <div class="actions"><span></span><button class="primary" id="go" type="button">Watch the video</button></div></section>`;
   document.getElementById("go").onclick=()=>{S.step="video";render()};
 }
 
+const DONE_MSG = POST_TEST ? "Video finished. You can start the post-test." : "Video finished. Tap Finish to see your result.";
 function renderVideo(){
   app.innerHTML = `<section class="panel">
     <h2>Training video: Patient cases A–G</h2>
     <div class="muted">About 6½ minutes. Seven patients: scoring, the red score, escalation thresholds, clinical concern, and oxygen with SpO₂ Scale 2.</div>
     <video id="v" controls playsinline preload="metadata" src="${VIDEO}"><track kind="captions" srclang="en" label="English" src="${VTT}" default></video>
-    <div class="note" id="vnote">${S.videoDone?"Video finished. You can start the post-test.":"Watch to the end to open the post-test. Captions are on."}</div>
-    <div class="actions"><span></span><button class="primary" id="go" type="button" ${S.videoDone?"":"disabled"}>Start post-test</button></div></section>`;
+    <div class="note" id="vnote">${S.videoDone?DONE_MSG:"Watch to the end to "+(POST_TEST?"open the post-test":"finish")+". Captions are on."}</div>
+    <div class="actions"><span></span><button class="primary" id="go" type="button" ${S.videoDone?"":"disabled"}>${POST_TEST?"Start post-test":"Finish"}</button></div></section>`;
   const v=document.getElementById("v");
-  v.addEventListener("ended",()=>{S.videoDone=true;document.getElementById("go").disabled=false;document.getElementById("vnote").textContent="Video finished. You can start the post-test."});
-  document.getElementById("go").onclick=()=>startPhase("post");
+  v.addEventListener("ended",()=>{S.videoDone=true;document.getElementById("go").disabled=false;document.getElementById("vnote").textContent=DONE_MSG});
+  document.getElementById("go").onclick=()=>POST_TEST?startPhase("post"):(S.step="result",render(),window.scrollTo(0,0));
+}
+
+function renderPreOnlyResult(){
+  const pre=score(S.pre);
+  app.innerHTML = `<section class="panel">
+    <h2>Thank you, you have finished</h2>
+    <div class="scores"><div class="score"><span>Pre-test</span><strong>${pre}/10</strong></div></div>
+    <div class="muted">${pre>=8?"Well done.":"The video covers every topic in the test. Review it with your team leader or educator if you need to."}</div>
+    <div>
+      <div style="font-weight:700;margin-bottom:6px">Your result record</div>
+      <div class="code" id="code">${esc(resultLine())}</div>
+    </div>
+    <div class="note">${HAS_SERVER?"Your result is saved for the EWS project team. You can also show this screen to your team leader.":"Show this screen to your team leader, or copy the record and send it to the NEWS educator."}</div>
+    <div class="actions"><button class="ghost" id="again" type="button">New staff member</button><button class="primary" id="copy" type="button">Copy result</button></div>
+    <div id="copied" class="muted" hidden>Copied.</div>
+  </section>${SHOW_ANSWERS_PRE_ONLY?answersPanel(S.pre,"Answers (pre-test)"):""}`;
+  wireResult();
+}
+function answersPanel(arr,title){
+  return `<section class="panel" style="margin-top:16px">
+    <h2>${title}</h2>
+    <div class="review">${Q.map((q,i)=>{const ok=arr[i]===q.a;return `<div class="rv ${ok?"":"wrong"}">
+      <div><b>${i+1}.</b> ${esc(q.q)}</div>
+      ${ok?`<div class="ok">Correct: ${esc(q.o[q.a])}</div>`:`<div class="no">Your answer: ${arr[i]===null?"none":esc(q.o[arr[i]])}</div><div class="ok">Correct: ${esc(q.o[q.a])}</div>`}
+      <div class="muted">Covered in: ${esc(q.r)}</div></div>`}).join("")}</div>
+  </section>`;
+}
+function wireResult(){
+  document.getElementById("copy").onclick=async()=>{
+    const t=resultLine();
+    try{await navigator.clipboard.writeText(t);document.getElementById("copied").hidden=false}
+    catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById("code"));const s=getSelection();s.removeAllRanges();s.addRange(r);document.getElementById("copied").textContent="Selected. Copy it from your device menu.";document.getElementById("copied").hidden=false}
+  };
+  document.getElementById("again").onclick=()=>{Object.assign(S,{step:"start",id:"",ward:"",role:"",phase:"pre",i:0,pre:Array(Q.length).fill(null),post:Array(Q.length).fill(null),videoDone:false});render();window.scrollTo(0,0)};
 }
 
 function resultLine(){
   const d=new Date(), p=n=>String(n).padStart(2,"0");
   const ds=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
-  return `NEWS Knowledge Check | Staff ID ${S.id} | Ward ${S.ward} | ${S.role} | ${ds} | Pre ${score(S.pre)}/10 | Post ${score(S.post)}/10`;
+  return `NEWS Knowledge Check | Staff ID ${S.id} | Ward ${S.ward} | ${S.role} | ${ds} | Pre ${score(S.pre)}/10${POST_TEST?` | Post ${score(S.post)}/10`:" | Video watched"}`;
 }
 
 function renderResult(){
+  if(!POST_TEST) return renderPreOnlyResult();
   const pre=score(S.pre), post=score(S.post), ch=post-pre, pass=post>=8;
   app.innerHTML = `<section class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Your result</h2><span class="pill ${pass?"pass":"fail"}">${pass?"Passed (8/10 or more)":"Below 8/10: review the video"}</span></div>
@@ -243,20 +290,8 @@ function renderResult(){
     <div class="note">${HAS_SERVER?"Your result is saved for the EWS project team. You can also show this screen to your team leader.":"Show this screen to your team leader, or copy the record and send it to the NEWS educator."}</div>
     <div class="actions"><button class="ghost" id="again" type="button">New staff member</button><button class="primary" id="copy" type="button">Copy result</button></div>
     <div id="copied" class="muted" hidden>Copied.</div>
-  </section>
-  <section class="panel" style="margin-top:16px">
-    <h2>Answers (post-test)</h2>
-    <div class="review">${Q.map((q,i)=>{const ok=S.post[i]===q.a;return `<div class="rv ${ok?"":"wrong"}">
-      <div><b>${i+1}.</b> ${esc(q.q)}</div>
-      ${ok?`<div class="ok">Correct: ${esc(q.o[q.a])}</div>`:`<div class="no">Your answer: ${S.post[i]===null?"none":esc(q.o[S.post[i]])}</div><div class="ok">Correct: ${esc(q.o[q.a])}</div>`}
-      <div class="muted">Covered in: ${esc(q.r)}</div></div>`}).join("")}</div>
-  </section>`;
-  document.getElementById("copy").onclick=async()=>{
-    const t=resultLine();
-    try{await navigator.clipboard.writeText(t);document.getElementById("copied").hidden=false}
-    catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById("code"));const s=getSelection();s.removeAllRanges();s.addRange(r);document.getElementById("copied").textContent="Selected. Copy it from your device menu.";document.getElementById("copied").hidden=false}
-  };
-  document.getElementById("again").onclick=()=>{Object.assign(S,{step:"start",id:"",ward:"",role:"",phase:"pre",i:0,pre:Array(Q.length).fill(null),post:Array(Q.length).fill(null),videoDone:false});render();window.scrollTo(0,0)};
+  </section>${answersPanel(S.post,"Answers (post-test)")}`;
+  wireResult();
 }
 document.addEventListener("copy",e=>{if(e.target.closest&&e.target.closest(".test"))e.preventDefault()});
 document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest(".test"))e.preventDefault()});

@@ -125,7 +125,7 @@ input, select { border: 1px solid var(--line); background: var(--card); border-r
 
     <div class="card">
       <div class="row" style="justify-content:space-between"><h2>Staff</h2><input id="find" placeholder="Search staff ID"></div>
-      <p class="sub">First pre-test and best post-test for each staff ID. Staff below 8/10 are listed first, with the topics they still missed, for one-to-one follow-up.</p>
+      <p class="sub">First pre-test and best post-test for each staff ID. Lowest scores are listed first, with the topics they missed (from the post-test, or the pre-test while there is no post-test), for one-to-one follow-up.</p>
       <div class="scroll"><table class="tbl" id="stable"></table></div>
     </div>
     <p class="sub small" style="margin-top:14px">The post-test is taken straight after the video with the same questions, so it shows short-term recall. To check that learning lasts, ask staff to repeat the test after 4–6 weeks: the page uses the first pre-test and the best post-test for each staff ID, and lists every attempt in the CSV.</p>
@@ -206,7 +206,8 @@ function render() {
     [a == null ? "–" : a.toFixed(1) + " → " + (b == null ? "–" : b.toFixed(1)), "Average score /10, pre → post" + (a != null && b != null ? ` <span class="${b >= a ? "up" : "down"}">${b >= a ? "▲" : "▼"} ${Math.abs(b - a).toFixed(1)}</span>` : "")],
     [withPost ? `${passed} / ${withPost}` : "–", `Passed (8/10 or more)${withPost ? " · " + pct(passed / withPost * 100) : ""}`],
     [pair.length ? `${improved} / ${pair.length}` : "–", "Scored higher after the video"],
-    [`${gapsN} of ${N}`, "Questions still under 80% after the video"]
+    post.length ? [`${gapsN} of ${N}`, "Questions still under 80% after the video"]
+      : [`${S.filter(s => s.pre.rate != null && s.pre.rate < 80).length} of ${N}`, "Questions under 80% in the pre-test"]
   ].map(([v, l]) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
 
   // themes
@@ -285,13 +286,13 @@ function renderHeat(P) {
 function renderStaff(P) {
   const f = $("find").value.trim().toLowerCase();
   const list = P.filter(e => !f || e.id.toLowerCase().includes(f)).sort((a, b) => {
-    const sa = a.best ? a.best.score : -1, sb = b.best ? b.best.score : -1;
+    const sa = a.best ? a.best.score : a.pre ? a.pre.score : -1, sb = b.best ? b.best.score : b.pre ? b.pre.score : -1;
     return (sa >= PASS) - (sb >= PASS) || sa - sb || a.id.localeCompare(b.id);
   });
-  $("stable").innerHTML = `<tr><th>Staff ID</th><th>Ward</th><th>Role</th><th>Date</th><th>Pre</th><th>Best post</th><th>Result</th><th>Still missed after video</th></tr>` + (list.map(e => {
-    const miss = e.best ? Q.map((_, i) => i).filter(i => !ok(e.best.ans[i], i)) : [];
-    const res = !e.best ? `<span class="chip mid">No post-test</span>` : e.best.score >= PASS ? `<span class="chip ok">Passed</span>` : `<span class="chip no">Below 8</span>`;
-    return `<tr><td><b>${esc(e.id)}</b></td><td>${esc(e.ward)}</td><td>${esc(e.role)}</td><td style="white-space:nowrap">${e.date.slice(0, 10)}</td><td>${e.pre ? e.pre.score : "–"}</td><td>${e.best ? `<b>${e.best.score}</b>${e.tries > 1 ? ` <span class="sub small">(${e.tries} tries)</span>` : ""}` : "–"}</td><td>${res}</td><td class="small">${e.best ? (miss.length ? miss.map(i => `Q${i + 1} ${esc(TOPIC[i].t)}`).join("; ") : "None") : "–"}</td></tr>`;
+  $("stable").innerHTML = `<tr><th>Staff ID</th><th>Ward</th><th>Role</th><th>Date</th><th>Pre</th><th>Best post</th><th>Result</th><th>Missed (after video, or pre-test if no post-test yet)</th></tr>` + (list.map(e => {
+    const use = e.best || e.pre, miss = use ? Q.map((_, i) => i).filter(i => !ok(use.ans[i], i)) : [];
+    const res = !e.best ? `<span class="chip mid">Pre-test only</span>` : e.best.score >= PASS ? `<span class="chip ok">Passed</span>` : `<span class="chip no">Below 8</span>`;
+    return `<tr><td><b>${esc(e.id)}</b></td><td>${esc(e.ward)}</td><td>${esc(e.role)}</td><td style="white-space:nowrap">${e.date.slice(0, 10)}</td><td>${e.pre ? e.pre.score : "–"}</td><td>${e.best ? `<b>${e.best.score}</b>${e.tries > 1 ? ` <span class="sub small">(${e.tries} tries)</span>` : ""}` : "–"}</td><td>${res}</td><td class="small">${use ? (miss.length ? miss.map(i => `Q${i + 1} ${esc(TOPIC[i].t)}`).join("; ") : "None") : "–"}</td></tr>`;
   }).join("") || `<tr><td colspan="8" class="sub">No results yet.</td></tr>`);
 }
 
