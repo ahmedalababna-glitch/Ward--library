@@ -124,11 +124,11 @@ input, select { border: 1px solid var(--line); background: var(--card); border-r
     </div>
 
     <div class="card">
-      <div class="row" style="justify-content:space-between"><h2>Staff</h2><input id="find" placeholder="Search staff ID"></div>
-      <p class="sub">First pre-test and best post-test for each staff ID. Lowest scores are listed first, with the topics they missed (from the post-test, or the pre-test while there is no post-test), for one-to-one follow-up.</p>
+      <div class="row" style="justify-content:space-between"><h2>Each person (anonymous)</h2><input id="find" placeholder="Search code"></div>
+      <p class="sub">Staff are not named: each person gets a random code (P-…) when they start, shown on their result screen. Lowest scores are listed first, with the topics they missed (from the post-test, or the pre-test while there is no post-test), for one-to-one follow-up.</p>
       <div class="scroll"><table class="tbl" id="stable"></table></div>
     </div>
-    <p class="sub small" style="margin-top:14px">The post-test is taken straight after the video with the same questions, so it shows short-term recall. To check that learning lasts, ask staff to repeat the test after 4–6 weeks: the page uses the first pre-test and the best post-test for each staff ID, and lists every attempt in the CSV.</p>
+    <p class="sub small" style="margin-top:14px">The post-test is taken straight after the video with the same questions, so it shows short-term recall. To check that learning lasts, ask staff to repeat the test after 4–6 weeks: the page uses the first pre-test and the best post-test for each code, and lists every attempt in the CSV.</p>
   </div>
 </div>
 
@@ -202,7 +202,7 @@ function render() {
   const improved = pair.filter(e => e.post.score > e.pre.score).length;
   const gapsN = S.filter(s => s.post.rate != null && s.post.rate < 80).length;
   $("kpis").innerHTML = [
-    [P.length, "Staff tested"],
+    [P.length, "People tested"],
     [a == null ? "–" : a.toFixed(1) + " → " + (b == null ? "–" : b.toFixed(1)), "Average score /10, pre → post" + (a != null && b != null ? ` <span class="${b >= a ? "up" : "down"}">${b >= a ? "▲" : "▼"} ${Math.abs(b - a).toFixed(1)}</span>` : "")],
     [withPost ? `${passed} / ${withPost}` : "–", `Passed (8/10 or more)${withPost ? " · " + pct(passed / withPost * 100) : ""}`],
     [pair.length ? `${improved} / ${pair.length}` : "–", "Scored higher after the video"],
@@ -242,7 +242,7 @@ function render() {
   }).join("") : `<p class="sub">No results for this selection.</p>`;
 
   renderMistakes(P); renderHeat(P); renderStaff(P);
-  $("testn").textContent = DEMO || !TESTN ? "" : ` · ${TESTN} test entries (staff ID "TEST") not counted`;
+  $("testn").textContent = DEMO || !TESTN ? "" : ` · ${TESTN} trial runs (code "TEST", from the ?test=1 link) not counted`;
   $("updated").textContent = (DEMO ? "Example data · " : "Updated ") + new Date().toLocaleString();
 }
 
@@ -289,7 +289,7 @@ function renderStaff(P) {
     const sa = a.best ? a.best.score : a.pre ? a.pre.score : -1, sb = b.best ? b.best.score : b.pre ? b.pre.score : -1;
     return (sa >= PASS) - (sb >= PASS) || sa - sb || a.id.localeCompare(b.id);
   });
-  $("stable").innerHTML = `<tr><th>Staff ID</th><th>Ward</th><th>Role</th><th>Date</th><th>Pre</th><th>Best post</th><th>Result</th><th>Missed (after video, or pre-test if no post-test yet)</th></tr>` + (list.map(e => {
+  $("stable").innerHTML = `<tr><th>Code</th><th>Ward</th><th>Role</th><th>Date</th><th>Pre</th><th>Best post</th><th>Result</th><th>Missed (after video, or pre-test if no post-test yet)</th></tr>` + (list.map(e => {
     const use = e.best || e.pre, miss = use ? Q.map((_, i) => i).filter(i => !ok(use.ans[i], i)) : [];
     const res = !e.best ? `<span class="chip mid">Pre-test only</span>` : e.best.score >= PASS ? `<span class="chip ok">Passed</span>` : `<span class="chip no">Below 8</span>`;
     return `<tr><td><b>${esc(e.id)}</b></td><td>${esc(e.ward)}</td><td>${esc(e.role)}</td><td style="white-space:nowrap">${e.date.slice(0, 10)}</td><td>${e.pre ? e.pre.score : "–"}</td><td>${e.best ? `<b>${e.best.score}</b>${e.tries > 1 ? ` <span class="sub small">(${e.tries} tries)</span>` : ""}` : "–"}</td><td>${res}</td><td class="small">${use ? (miss.length ? miss.map(i => `Q${i + 1} ${esc(TOPIC[i].t)}`).join("; ") : "None") : "–"}</td></tr>`;
@@ -297,7 +297,7 @@ function renderStaff(P) {
 }
 
 function csv() {
-  const head = ["Time", "Staff ID", "Ward", "Role", "Stage", "Score/10", "Session"].concat(Q.map((_, i) => "Q" + (i + 1) + " answer")).concat(Q.map((_, i) => "Q" + (i + 1) + " correct"));
+  const head = ["Time", "Code", "Ward", "Role", "Stage", "Score/10", "Session"].concat(Q.map((_, i) => "Q" + (i + 1) + " answer")).concat(Q.map((_, i) => "Q" + (i + 1) + " correct"));
   const q = v => '"' + String(v).replace(/"/g, '""') + '"';
   const lines = [head.join(",")].concat(filtered().map(r => [r[0], q(r[1]), r[2], r[3], r[4], r[5], q(r[6])].concat(r[7]).concat(r[7].map((a, i) => ok(a, i) ? 1 : 0)).join(",")));
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], { type: "text/csv" })); a.download = "news-knowledge-check-results.csv"; a.click();

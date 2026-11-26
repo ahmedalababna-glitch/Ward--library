@@ -29,7 +29,7 @@ const out_ = (o) => ContentService.createTextOutput(JSON.stringify(o)).setMimeTy
 const SITE = "https://ahmedalababna-glitch.github.io/Ward--library/";
 
 // ---- NEWS Knowledge Check (news-test/) ----
-const NEWS_HEAD = ["Time", "Staff ID", "Ward", "Role", "Stage", "Score /10", "Session", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"];
+const NEWS_HEAD = ["Time", "Code", "Ward", "Role", "Stage", "Score /10", "Session", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"];
 const NEWS_WARDS = ["3A", "3C", "3D", "4A", "4B", "4C", "4D", "Other"];
 const NEWS_ROLES = ["RN", "PCA", "Other"];
 

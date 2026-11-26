@@ -47,6 +47,6 @@ The script you deployed before does not know about it yet, so update it once. **
 5. Click **Deploy → Manage deployments**, click the **pencil** (Edit), set **Version** to **New version**, then **Deploy**.
    Do not use "New deployment": that makes a new URL and the site would stop saving.
 
-Check: take the test once with staff ID `TEST` (not counted), then open the **Admin** link at the bottom of the NEWS test page and enter your PIN.
+Check: take the test once with the trial link `…/news-test/?ward=4D&test=1` (saved as code `TEST`, not counted), then open the **Admin** link at the bottom of the NEWS test page and enter your PIN.
 
-What is saved: staff ID, ward, role, date, score, and the option chosen for each question. No names.
+What is saved: ward, role, date, score, a random code per person (P-…), and the option chosen for each question. No names or staff IDs.
