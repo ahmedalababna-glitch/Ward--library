@@ -33,10 +33,24 @@ const NEWS_HEAD = ["Time", "Code", "Ward", "Role", "Stage", "Score /10", "Sessio
 const NEWS_WARDS = ["3A", "3C", "3D", "4A", "4B", "4C", "4D", "Other"];
 const NEWS_ROLES = ["RN", "PCA", "Other"];
 
+// finds the tab even if its name differs in capitals or spaces; never fails if two requests create it at once
+function findTab_(ss, name) {
+  const want = name.toLowerCase().replace(/\s+/g, " ").trim();
+  return ss.getSheets().find(t => t.getName().toLowerCase().replace(/\s+/g, " ").trim() === want) || null;
+}
 function newsSheet_() {
   const ss = book_();
-  let sh = ss.getSheetByName("NEWS results");
-  if (!sh) { sh = ss.insertSheet("NEWS results"); sh.appendRow(NEWS_HEAD); sh.setFrozenRows(1); }
+  let sh = findTab_(ss, "NEWS results");
+  if (sh) return sh;
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    SpreadsheetApp.flush();
+    sh = findTab_(ss, "NEWS results");
+    if (!sh) {
+      try { sh = ss.insertSheet("NEWS results"); sh.appendRow(NEWS_HEAD); sh.setFrozenRows(1); }
+      catch (err) { SpreadsheetApp.flush(); sh = findTab_(ss, "NEWS results") || SpreadsheetApp.openById(ss.getId()).getSheetByName("NEWS results"); if (!sh) throw err; }
+    }
+  } finally { lock.releaseLock(); }
   return sh;
 }
 // Q1..Q10 hold the option the person chose, as listed in news-test/questions.js (A = first option), "-" = no answer
@@ -49,8 +63,9 @@ function newsPost_(d) {
   const ans = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => { const a = String((d.ans || [])[i] || "-"); return /^[A-D]$/.test(a) ? a : "-"; });
   const row = [new Date(), "'" + clean(d.id, 30), NEWS_WARDS.indexOf(d.ward) < 0 ? "Other" : d.ward, NEWS_ROLES.indexOf(d.role) < 0 ? "Other" : d.role,
     d.stage === "POST" ? "POST" : "PRE", Math.max(0, Math.min(10, Math.round(Number(d.score) || 0))), "'" + clean(d.session, 20)].concat(ans);
+  const sh = newsSheet_();
   const lock = LockService.getScriptLock(); lock.waitLock(10000);
-  try { newsSheet_().appendRow(row); } finally { lock.releaseLock(); }
+  try { sh.appendRow(row); } finally { lock.releaseLock(); }
   return out_({ ok: true });
 }
 
